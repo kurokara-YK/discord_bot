@@ -1,5 +1,12 @@
 # 個人の Apps Script プロジェクト ID
-.clasp.json
+# .clasp.json はプレースホルダの状態でリポジトリに含めているため除外しない。
+# 自分のスクリプトIDを書き込んだあとは，値がコミットされないよう注意すること。
+#   git update-index --skip-worktree .clasp.json
+# .clasp.json
+
+# 個人の設定値（Webhook URL / スプレッドシートのURL）
+# gas/config_english.js も同じくプレースホルダの状態で含めている。
+#   git update-index --skip-worktree gas/config_english.js
 
 # 画像・教材の紙面など。著作権保護のためコミットしないこと
 *.HEIC

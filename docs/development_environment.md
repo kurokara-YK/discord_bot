@@ -231,7 +231,10 @@ clasp は Node.js の上で動くため，まず Node.js を入れます．
 
 > **補足**
 > `.clasp.json` は「このフォルダは，どのGASプロジェクトとつながっているか」を記録した設定ファイルです．
-> あなた専用の情報なので，Gitで管理してはいけません（後述）．
+> このリポジトリを `git clone` した場合は，`.clasp.json` が
+> `ここにスクリプトIDを入れてください` というプレースホルダの状態で入っています．
+> `clasp clone` を実行するとこのファイルが自分のIDで上書きされるほか，
+> ファイルを直接開いて `scriptId` を書き換えても構いません．
 
 <p align="right">(<a href="#dev-env-top">上に戻る</a>)</p>
 
@@ -260,38 +263,42 @@ clasp は Node.js の上で動くため，まず Node.js を入れます．
 
 次の2つのファイルには，**あなた個人の情報が入ります．**
 
-| ファイル | 入っている情報 | 現在の扱い |
+次の2つのファイルは，**プレースホルダの状態でリポジトリに含まれています．**
+
+| ファイル | 書き込む情報 | 初期値 |
 | --- | --- | --- |
-| `.clasp.json` | あなたのGASプロジェクトのID | `.gitignore` 済み |
-| `gas/config_english.js` | Discord Webhook URL，スプレッドシートのURL | **リポジトリに含まれる** |
+| `.clasp.json` | あなたのGASプロジェクトのID | `ここにスクリプトIDを入れてください` |
+| `gas/config_english.js` | Discord Webhook URL，スプレッドシートのURL | `ここに〜を入れてください` |
 
-`.clasp.json` は `.gitignore` に登録済みなので，そのままで問題ありません．
+どちらも clone した直後から編集できるよう，あえて `.gitignore` に登録していません．
+そのため **自分の値を書き込むと，その値がコミットされる状態になります．**
 
-### config_english.js の注意
+### 自分の値をコミットしないようにする
 
-`gas/config_english.js` は，はじめから設定を書き込めるよう
-プレースホルダの状態でリポジトリに含まれています．
-そのため **`.gitignore` には登録されていません．**
-
-自分の値を書き込んだあとGitHubなどへ push する場合は，
-次のどちらかを行って，値がコミットされないようにしてください．
+値を書き込んだあとGitHubなどへ push する場合は，
+次のどちらかを行ってください．
 
 ```sh
 # 方法1: 手元の変更をコミット対象から外す（推奨）
 # ファイルはリポジトリに残しつつ，自分の編集だけ無視される
+git update-index --skip-worktree .clasp.json
 git update-index --skip-worktree gas/config_english.js
 
 # 方法2: .gitignore に登録して追跡をやめる
+echo ".clasp.json" >> .gitignore
 echo "gas/config_english.js" >> .gitignore
-git rm --cached gas/config_english.js
+git rm --cached .clasp.json gas/config_english.js
 ```
 
-設定を書き換えたあと，`git status` に `gas/config_english.js` が
+値を書き換えたあと，`git status` に2つのファイルが
 **出てこなければ**，値がコミットされる心配はありません．
 
 ```sh
 git status
 ```
+
+> **方法1を元に戻したいとき**
+> `git update-index --no-skip-worktree <ファイル名>` で解除できます．
 
 > Webhook URLを誤って公開してしまった場合は，
 > **Discord側でそのウェブフックを削除して作り直してください．**

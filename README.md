@@ -402,6 +402,7 @@ Apps Scriptの画面上部の **実行する関数** から選んで実行しま
 .
 ├── README.md
 ├── .gitignore
+├── .clasp.json
 ├── docs
 │   ├── getting_started.md
 │   ├── chunking_rules.md
@@ -424,6 +425,7 @@ Apps Scriptの画面上部の **実行する関数** から選んで実行しま
 | ファイル | 役割 |
 | --- | --- |
 | `README.md` | 機能・仕様・設定項目のリファレンス |
+| `.clasp.json` | claspが使うGASプロジェクトID．**自分のIDを書き込んで使う** |
 | `docs/getting_started.md` | セットアップ手順 |
 | `docs/chunking_rules.md` | チャンク分割の基準 |
 | `docs/development_environment.md` | clasp を使った開発環境の準備手順 |
@@ -459,8 +461,17 @@ clone後にこのファイルを開き，自分の値へ書き換えて使って
 - 例文・訳を含むスプレッドシートを公開しない（共有リンクも貼らない）
 - 作成したデータは個人の学習用に留める
 
-`.gitignore` では `gas/config_english.js` と `.clasp.json` を除外しています．
-これらには Webhook URL やプロジェクトIDなど個人の情報が入るため，公開しないでください．
+`gas/config_english.js` と `.clasp.json` は，プレースホルダの状態でリポジトリに含まれています．
+これらには Webhook URL やプロジェクトIDなど個人の情報を書き込むため，
+**自分の値を入れたあとは，その値をコミットしないよう注意してください．**
+
+```sh
+git update-index --skip-worktree .clasp.json
+git update-index --skip-worktree gas/config_english.js
+```
+
+詳しくは [docs/development_environment.md](docs/development_environment.md) の
+「Git 管理上の注意」を参照してください．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
