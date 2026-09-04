@@ -1,0 +1,9 @@
+# 個人の Apps Script プロジェクト ID
+.clasp.json
+
+# 画像・教材の紙面など。著作権保護のためコミットしないこと
+*.HEIC
+*.heic
+*.jpg
+*.jpeg
+*.png
