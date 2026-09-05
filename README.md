@@ -491,6 +491,7 @@ git update-index --skip-worktree gas/config_english.js
 | --- | --- |
 | 作成者 | kurokara-YK |
 | 連絡先 | kurokara1226@gmail.com |
+| リンク集 | https://lit.link/kurokara |
 | リポジトリ | https://github.com/kurokara-YK/daily_learning_discord_bot |
 
 不具合の報告や改善の提案は，
