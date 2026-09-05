@@ -181,13 +181,34 @@ function getSettings_() {
     },
     noticeOffsetDays: toIntegerAtLeast_(s.noticeOffsetDays, 7, 0),
 
-    assigneeMessageTemplate: toText_(s.assigneeMessageTemplate, "次回の担当は{assignees}です。"),
+    // 文面は messages.js から読む。config には文面を書かない。
+    messages: resolveMessages_(s.messageSet)
+  };
+}
+
+// messages.js の文面を読み，抜けている項目を雛形で補う。
+function resolveMessages_(messageSet) {
+  const source = getMessages_(messageSet);
+  const fallback = MESSAGES.template;
+
+  return {
+    assigneeMessageTemplate: toText_(
+      source.assigneeMessageTemplate, fallback.assigneeMessageTemplate
+    ),
+
     // 改行で始まるため trim せずそのまま使う。
-    contentSuffixTemplate: s.contentSuffixTemplate === undefined
-      ? "\n内容: {content}" : String(s.contentSuffixTemplate),
-    eventMessageTemplate: toText_(s.eventMessageTemplate, "@everyone 次回は{content}があります。"),
-    unknownMemberTemplate: toText_(s.unknownMemberTemplate, "{name}（ID未登録）"),
-    assigneeSeparator: toText_(s.assigneeSeparator, "、")
+    contentSuffixTemplate: source.contentSuffixTemplate === undefined
+      ? fallback.contentSuffixTemplate : String(source.contentSuffixTemplate),
+
+    eventMessageTemplate: toText_(
+      source.eventMessageTemplate, fallback.eventMessageTemplate
+    ),
+    unknownMemberTemplate: toText_(
+      source.unknownMemberTemplate, fallback.unknownMemberTemplate
+    ),
+    assigneeSeparator: toText_(
+      source.assigneeSeparator, fallback.assigneeSeparator
+    )
   };
 }
 

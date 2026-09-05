@@ -130,6 +130,8 @@ for f in gas/*.js; do node --check "$f" || echo "NG: $f"; done
 | `.clasp.json` | 自分のApps ScriptプロジェクトのスクリプトID |
 | `gas/config_roster.js` | Discord Webhook URL，スプレッドシートのURL，フォルダのURL |
 
+`gas/messages.js`（文面）には個人情報が入らないため，通常どおりコミットできます．
+
 自分の値を書き込んだあとは，次のコマンドで変更が追跡されないようにしてください．
 
 ```sh

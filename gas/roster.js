@@ -178,6 +178,7 @@ function markAsSent_(settings, rowNumber) {
 
 // 判定結果から Discord 本文を作る。
 function buildMessage_(settings, target, memberMap) {
+  const messages = settings.messages;
   const values = {
     content: target.content,
     dutyDate: formatDate_(target.dutyDate, settings.fiscalYear),
@@ -186,17 +187,17 @@ function buildMessage_(settings, target, memberMap) {
 
   // 担当者がいない回は，内容だけのイベント通知にする。
   if (target.assigneeNames.length === 0) {
-    return applyTemplate_(settings.eventMessageTemplate, values);
+    return applyTemplate_(messages.eventMessageTemplate, values);
   }
 
   values.assignees = target.assigneeNames
     .map(function(name) { return buildMention_(settings, name, memberMap); })
-    .join(settings.assigneeSeparator);
+    .join(messages.assigneeSeparator);
 
-  let message = applyTemplate_(settings.assigneeMessageTemplate, values);
+  let message = applyTemplate_(messages.assigneeMessageTemplate, values);
 
   if (target.content !== "") {
-    message += applyTemplate_(settings.contentSuffixTemplate, values);
+    message += applyTemplate_(messages.contentSuffixTemplate, values);
   }
 
   return message;
@@ -207,7 +208,7 @@ function buildMention_(settings, name, memberMap) {
   const discordId = memberMap[normalizeName_(name)];
 
   if (!isValidDiscordId_(discordId)) {
-    return applyTemplate_(settings.unknownMemberTemplate, { name: name });
+    return applyTemplate_(settings.messages.unknownMemberTemplate, { name: name });
   }
 
   return "<@" + String(discordId).trim() + ">";

@@ -241,6 +241,17 @@ GASの時間主導型トリガーは「8時ちょうど」ではなく「8時〜
 
 担当日と通知日のセルを直接書き換えます．セルをダブルクリックするとカレンダーから選べます．
 
+### 文面を変えたい
+
+Discordへ送る文面は `gas/messages.js` にあります．
+設定ファイルではなく，こちらを編集してください．
+
+どの文面を使うかは `gas/config_roster.js` の `messageSet` で指定します．
+
+```js
+messageSet: "presentation",   // messages.js の名前を書く
+```
+
 ### 学期が変わった
 
 新しいシートを作り，`rosterSheetName` と `fiscalStartYear` を変更します．
