@@ -119,10 +119,6 @@ function setupRosterSheet_(sheet, settings) {
       .build()
   );
 
-  // 内容とメモは左揃えのほうが読みやすい。
-  sheet.getRange(ROW.DATA_START, columns.contentNumber, dataRows, 2)
-    .setHorizontalAlignment("left");
-
   // 通知済み列はチェックボックスにする。
   // 通知を送るとチェックが入り，外せばもう一度送れる。
   sheet.getRange(ROW.DATA_START, columns.sentNumber, dataRows, 1)
@@ -168,13 +164,13 @@ function setupMemberSheet_(sheet) {
   sheet.getRange(MEMBER_ROW.HEADER, 1, 1, headers.length).setValues([headers]);
 
   sheet.getRange(1, 1, rowCount, headers.length)
+    .setHorizontalAlignment("center")
     .setVerticalAlignment("middle")
     .setBorder(true, true, true, true, true, true);
 
   sheet.getRange(MEMBER_ROW.HEADER, 1, 1, headers.length)
     .setFontWeight("bold")
-    .setBackground("#fff2cc")
-    .setHorizontalAlignment("center");
+    .setBackground("#fff2cc");
 
   sheet.setFrozenRows(MEMBER_ROW.HEADER);
   sheet.setRowHeight(MEMBER_ROW.HEADER, 32);
