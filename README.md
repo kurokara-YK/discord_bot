@@ -17,6 +17,7 @@ Googleアカウントがあれば無料で使えます．
     <li><a href="#スプレッドシートの形式">スプレッドシートの形式</a></li>
     <li><a href="#通知の条件">通知の条件</a></li>
     <li><a href="#列と行の数を変える">列と行の数を変える</a></li>
+    <li><a href="#文面を変える">文面を変える</a></li>
     <li><a href="#設定項目一覧">設定項目一覧</a></li>
     <li><a href="#実行できる関数">実行できる関数</a></li>
     <li><a href="#ファイル構成">ファイル構成</a></li>
@@ -64,8 +65,10 @@ Googleアカウントがあれば無料で使えます．
 要旨添削が必要な場合は月曜日の13時までに提出しましょう。
 ```
 
-文面はすべて設定ファイルで変更できます．
+文面は `gas/messages.js` で編集します．
 `{assignees}`（担当者のメンション），`{content}`（内容列），`{dutyDate}`（担当日）が使えます．
+
+詳しくは [文面を変える](#文面を変える) を参照してください．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
@@ -130,7 +133,7 @@ BOTが作るスプレッドシートには，**当番表**と**名簿**の2つ�
 | B列 | `担当日` | 当番を担当する日 |
 | C列 | `通知日` | この日にDiscordへ通知する．空欄なら担当日から自動計算 |
 | D〜K列 | `1人目`〜`8人目` | 担当者．**プルダウンから選ぶ**．いない回は空欄 |
-| L列 | `内容` | S1，ガイダンスなど．**通知文に載る** |
+| L列 | `内容` | 発表回名やイベント名など．**通知文に載る**．プルダウンから選ぶか自由入力 |
 | M列 | `メモ` | 自由記入欄．**通知には使わない** |
 | N列 | `通知済み` | 通知を送るとチェックが入る．**外すともう一度送れる** |
 
@@ -213,6 +216,82 @@ rosterRowCount: 20,       // データ行を20行用意する
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
+## 文面を変える
+
+Discordへ送る文面は，設定ファイルではなく **`gas/messages.js`** にまとめています．
+
+このBOTは研究発表・掃除当番など用途を選ばないため，
+**用途に依存する文面を設定ファイルから切り離しています．**
+
+### 文面のまとまりを選ぶ
+
+`gas/messages.js` には，文面のまとまりが名前つきで定義されています．
+
+| 名前 | 用途 |
+| --- | --- |
+| `template` | 用途を問わない雛形．自分の文面を作る出発点 |
+| `presentation` | 研究室のミーティング発表当番 |
+
+どれを使うかは `gas/config_roster.js` で指定します．
+
+```js
+messageSet: "presentation",
+```
+
+### 自分用の文面を作る
+
+`gas/messages.js` の `template` をコピーし，別の名前で足します．
+
+```js
+const MESSAGES = {
+
+  template: { ... },
+  presentation: { ... },
+
+  // 追加した文面
+  mylab: {
+    assigneeMessageTemplate: "今週の担当は{assignees}です。",
+    contentSuffixTemplate: "\n内容: {content}",
+    eventMessageTemplate: "@everyone 今週は{content}です。",
+    unknownMemberTemplate: "{name}（ID未登録）",
+    assigneeSeparator: "、"
+  }
+};
+```
+
+そのうえで，設定ファイルの `messageSet` をその名前に変えます．
+
+```js
+messageSet: "mylab",
+```
+
+**既存の文面を書き換える必要はありません．** 追加するだけで切り替わります．
+
+### 文面の項目
+
+| 項目 | いつ使われるか |
+| --- | --- |
+| `assigneeMessageTemplate` | 担当者がいる回 |
+| `contentSuffixTemplate` | 上の文面の末尾．内容列が空の回では足されない |
+| `eventMessageTemplate` | 担当者がいない，内容だけの回 |
+| `unknownMemberTemplate` | Discord IDが未登録の人の表示 |
+| `assigneeSeparator` | 担当者が複数いるときのつなぎ文字 |
+
+### 使える変数
+
+| 変数 | 内容 |
+| --- | --- |
+| `{assignees}` | 担当者のメンション |
+| `{content}` | 内容列の値 |
+| `{dutyDate}` | 担当日（例: `9月24日`） |
+| `{name}` | 名前（`unknownMemberTemplate` でのみ使う） |
+
+> **補足**
+> `messageSet` に存在しない名前を書いた場合は，`template` の文面が使われ，
+> 実行ログに警告が出ます．書き間違いで通知が止まることはありません．
+
+<p align="right">(<a href="#readme-top">上に戻る</a>)</p>
+
 ## 設定項目一覧
 
 `gas/config_roster.js` で設定します．
@@ -248,19 +327,10 @@ rosterRowCount: 20,       // データ行を20行用意する
 
 | 設定名 | 説明 |
 | --- | --- |
-| `assigneeMessageTemplate` | 担当者がいる回の文面 |
-| `contentSuffixTemplate` | 担当者がいる回に，内容を末尾へ足す文面 |
-| `eventMessageTemplate` | 内容だけの回の文面 |
-| `unknownMemberTemplate` | Discord IDが未登録の人の表示 |
-| `assigneeSeparator` | 担当者メンションのつなぎ文字 |
+| `messageSet` | どの文面を使うか．`gas/messages.js` の名前を指定する |
 
-文面では次の変数が使えます．
-
-| 変数 | 内容 |
-| --- | --- |
-| `{assignees}` | 担当者のメンション |
-| `{content}` | 内容列の値 |
-| `{dutyDate}` | 担当日（例: `9月24日`） |
+文面そのものは `gas/messages.js` で編集します．
+詳しくは [文面を変える](#文面を変える) を参照してください．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
@@ -294,6 +364,7 @@ Apps Scriptエディタの「実行する関数」から選べます．
 | `gas/appsscript.json` | GASプロジェクトの設定．タイムゾーン，ログ出力，V8ランタイムを定義します |
 | `gas/config_roster.js` | **利用者が編集する設定ファイル．** Webhook URL，シート名，文面テンプレート |
 | `gas/main.js` | エントリーポイント．Apps Scriptの実行メニューに出る関数をまとめています |
+| `gas/messages.js` | **Discordへ送る文面．** 用途ごとに名前をつけて複数定義できます |
 | `gas/roster.js` | 当番表と名簿の読み取り，送信対象の判定，Discord本文の組み立て |
 | `gas/columns_def.js` | 当番表と名簿の行・列構造の定義．列位置はすべてここから計算されます |
 | `gas/spreadsheet_template.js` | スプレッドシートの新規作成，書式設定，プルダウンの設定 |

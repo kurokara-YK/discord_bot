@@ -19,10 +19,11 @@ const MEMBER_WIDTHS = [140, 200, 240];
 // プルダウンが参照する名簿の行数。実際の人数より多めにとる。
 const MEMBER_RANGE_ROWS = 200;
 
-// 内容列のプルダウン候補。自由入力も許可する。
+// 内容列のプルダウン候補。
+// 何を書くかは用途によって変わるため，こちらでは決め打ちしない。
+// 使ううちに定型が決まってきたら，ここへ書き足していく。
 const CONTENT_CHOICES = [
-  "S1", "S2", "S3", "S4", "S5", "S6",
-  "ガイダンス", "卒業研究相談会（B4）", "補講", "休講"
+  "テスト"
 ];
 
 // 当番表と名簿シートを持つスプレッドシートを新規作成する。
@@ -208,7 +209,8 @@ function applyDropdowns_(rosterSheet, memberSheet, settings) {
     .getRange(ROW.DATA_START, columns.assigneeFromNumber, rowCount, columns.assigneeCount)
     .setDataValidation(assigneeRule);
 
-  // 内容は自由記述もできるようにする。
+  // 内容列は，候補から選ぶことも自由に書くこともできるようにする。
+  // setAllowInvalid(true) のため，候補に無い内容も入力できる。
   const contentRule = SpreadsheetApp.newDataValidation()
     .requireValueInList(CONTENT_CHOICES, true)
     .setAllowInvalid(true)
