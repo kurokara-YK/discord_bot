@@ -1,99 +1,204 @@
 /****************************************************
  * utils.gs
  * ==================================================
- * 小さい共通関数
+ * 共通の小さな関数と，設定値の読み取り
  ****************************************************/
 
-// 空欄相当の値かどうかをそろえて判定する。
-function isBlank_(value) {
-  return value === "" || value === null || value === undefined;
+// ---------------------------------------------------
+// 値の正規化
+// ---------------------------------------------------
+
+// 空欄相当かどうか。当番表では "-" も担当者なしとして扱う。
+function isEmptyCell_(value) {
+  if (value === null || value === undefined) {
+    return true;
+  }
+
+  const text = String(value).trim();
+  return text === "" || text === "-";
 }
 
-// 数値設定が空なら既定値へ寄せる。
-function toIntegerOrDefault_(value, defaultValue) {
-  if (isBlank_(value)) {
+// 文字列設定を整える。空なら既定値へ寄せる。
+function toText_(value, defaultValue) {
+  if (value === null || value === undefined) {
     return defaultValue;
   }
 
-  const parsed = parseInt(String(value), 10);
-  return isNaN(parsed) ? defaultValue : parsed;
+  const text = String(value).trim();
+  return text === "" ? defaultValue : text;
 }
 
-// カンマ区切りや配列を重複なしの文字列配列へ正規化する。
-function normalizeStringList_(value) {
-  if (value === false || isBlank_(value)) {
-    return [];
+// 整数設定を整える。下限つき。
+function toIntegerAtLeast_(value, defaultValue, minimum) {
+  const parsed = parseInt(String(value), 10);
+  return Math.max(minimum, isNaN(parsed) ? defaultValue : parsed);
+}
+
+// Google の URL から ID を取り出す。ID をそのまま渡してもよい。
+function extractId_(value, pathKeyword) {
+  const text = String(value === null || value === undefined ? "" : value).trim();
+  const matched = text.match(new RegExp("/" + pathKeyword + "/([a-zA-Z0-9-_]+)"));
+
+  return matched && matched[1] ? matched[1] : text;
+}
+
+// 「ここに〜を入れてください」のまま残っているかどうか。
+function isPlaceholder_(value) {
+  return String(value || "").indexOf("ここに") === 0;
+}
+
+// 名前を突き合わせ用にそろえる。
+// 全角空白や連続した空白の違いを吸収する。
+// 例: "Taro  Yamada" と "Taro Yamada" を同じ扱いにする。
+function normalizeName_(value) {
+  return String(value === null || value === undefined ? "" : value)
+    .replace(/　/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+// 列記号を 0始まりの index へ変換する。例: A -> 0, M -> 12
+function colIndex_(colLetter) {
+  const upper = String(colLetter).trim().toUpperCase();
+  let num = 0;
+
+  for (let i = 0; i < upper.length; i += 1) {
+    num = num * 26 + (upper.charCodeAt(i) - 64);
   }
 
-  const source = Array.isArray(value) ? value : String(value).split(",");
-  const normalized = [];
+  return num - 1;
+}
 
-  source.forEach(function(item) {
-    if (isBlank_(item)) {
-      return;
-    }
+// ---------------------------------------------------
+// 日付
+// ---------------------------------------------------
 
-    const text = String(item).trim();
+// 値を Date へそろえる。読めなければ null。
+// "9/17" のように年が無い値は，年度から年を補う。
+function toDate_(value, fiscalYear) {
+  if (value === null || value === undefined) {
+    return null;
+  }
 
-    if (text && normalized.indexOf(text) === -1) {
-      normalized.push(text);
-    }
+  if (Object.prototype.toString.call(value) === "[object Date]") {
+    return isNaN(value.getTime()) ? null : value;
+  }
+
+  const text = String(value).trim();
+
+  if (text === "" || text === "-") {
+    return null;
+  }
+
+  const monthDay = text.match(/^(\d{1,2})\s*[\/\-月]\s*(\d{1,2})日?$/);
+
+  if (monthDay) {
+    return buildFiscalDate_(parseInt(monthDay[1], 10), parseInt(monthDay[2], 10), fiscalYear);
+  }
+
+  const parsed = new Date(text.replace(/-/g, "/"));
+  return isNaN(parsed.getTime()) ? null : parsed;
+}
+
+// 月日と年度から Date を作る。年度開始月より前の月は翌年になる。
+function buildFiscalDate_(month, day, fiscalYear) {
+  if (month < 1 || month > 12 || day < 1 || day > 31) {
+    return null;
+  }
+
+  const startYear = toIntegerAtLeast_(fiscalYear && fiscalYear.startYear, 0, 0);
+
+  if (startYear <= 0) {
+    return null;
+  }
+
+  const startMonth = Math.min(12, toIntegerAtLeast_(fiscalYear && fiscalYear.startMonth, 4, 1));
+  const year = month >= startMonth ? startYear : startYear + 1;
+  const date = new Date(year, month - 1, day);
+
+  // 2/30 のような存在しない日付は Date が繰り上げるため弾く。
+  const isSame = date.getFullYear() === year &&
+    date.getMonth() === month - 1 &&
+    date.getDate() === day;
+
+  return isSame ? date : null;
+}
+
+// 日付を時刻抜きの yyyy-MM-dd にそろえる。比較用。
+function toDateKey_(value, fiscalYear) {
+  const date = toDate_(value, fiscalYear);
+  return date === null ? null : Utilities.formatDate(date, TIME_ZONE, "yyyy-MM-dd");
+}
+
+// 表示用に「9月24日」の形へ。
+function formatDate_(value, fiscalYear) {
+  const date = toDate_(value, fiscalYear);
+  return date === null ? "" : Utilities.formatDate(date, TIME_ZONE, "M月d日");
+}
+
+// 日付をずらした新しい Date を返す。
+function addDays_(date, days) {
+  const shifted = new Date(date.getTime());
+  shifted.setDate(shifted.getDate() + days);
+  return shifted;
+}
+
+// テンプレートの {key} を置き換える。対応が無い {key} は空文字になる。
+function applyTemplate_(template, values) {
+  return String(template || "").replace(/\{(\w+)\}/g, function(match, key) {
+    return Object.prototype.hasOwnProperty.call(values, key) ? String(values[key]) : "";
   });
-
-  return normalized;
 }
 
-// ラベル名フィルタをユーザー設定から読みやすい形へ整える。
-function normalizeLabelFilterList_(targetEventLabels) {
-  return normalizeStringList_(targetEventLabels);
+// ---------------------------------------------------
+// 設定
+// ---------------------------------------------------
+
+// 設定を読み込み，検証して返す。
+function getSettings_() {
+  if (typeof DUTY_ROSTER_SETTINGS === "undefined" || !DUTY_ROSTER_SETTINGS) {
+    throw new Error("設定が見つかりません。config_roster.js を確認してください。");
+  }
+
+  const s = DUTY_ROSTER_SETTINGS;
+
+  return {
+    label: toText_(s.label, "当番リマインド Discord BOT"),
+
+    webhookUrl: toText_(s.webhookUrl, ""),
+    spreadsheetId: extractId_(s.spreadsheetId, "spreadsheets/d"),
+    templateFolderId: extractId_(s.templateFolderId, "folders"),
+
+    fileName: toText_(s.fileName, "当番表"),
+    rosterSheetName: toText_(s.rosterSheetName, "当番表"),
+    memberSheetName: toText_(s.memberSheetName, "名簿"),
+    assigneeColumnCount: toIntegerAtLeast_(s.assigneeColumnCount, 8, 1),
+    rosterRowCount: toIntegerAtLeast_(s.rosterRowCount, 20, 1),
+
+    fiscalYear: {
+      startYear: toIntegerAtLeast_(s.fiscalStartYear, 0, 0),
+      startMonth: toIntegerAtLeast_(s.fiscalStartMonth, 4, 1)
+    },
+    noticeOffsetDays: toIntegerAtLeast_(s.noticeOffsetDays, 7, 0),
+
+    assigneeMessageTemplate: toText_(s.assigneeMessageTemplate, "次回の担当は{assignees}です。"),
+    // 改行で始まるため trim せずそのまま使う。
+    contentSuffixTemplate: s.contentSuffixTemplate === undefined
+      ? "\n内容: {content}" : String(s.contentSuffixTemplate),
+    eventMessageTemplate: toText_(s.eventMessageTemplate, "@everyone 次回は{content}があります。"),
+    unknownMemberTemplate: toText_(s.unknownMemberTemplate, "{name}（ID未登録）"),
+    assigneeSeparator: toText_(s.assigneeSeparator, "、")
+  };
 }
 
-// 対象日比較のために時刻を 00:00 にそろえる。
-function normalizeToDayStart_(value) {
-  const date = new Date(value);
-  date.setHours(0, 0, 0, 0);
-  return date;
-}
+// Webhook URL を検証して返す。
+function getWebhookUrl_(settings) {
+  if (!settings.webhookUrl || settings.webhookUrl.indexOf("https://") !== 0) {
+    throw new Error(
+      "Discord Webhook URL が未設定です。" +
+      "config_roster.js の webhookUrl に，https:// から始まるURLを設定してください。"
+    );
+  }
 
-// 今日を基準に日数オフセットした日付を作る。
-function getTargetDateByOffsetDays_(offsetDays) {
-  const date = new Date();
-  date.setHours(0, 0, 0, 0);
-  date.setDate(date.getDate() + offsetDays);
-  return date;
-}
-
-// イベント一覧を開始時刻と件名の順で安定ソートする。
-function sortCalendarEvents_(events) {
-  return events.slice().sort(function(a, b) {
-    const startDiff = a.startTime.getTime() - b.startTime.getTime();
-
-    if (startDiff !== 0) {
-      return startDiff;
-    }
-
-    if (a.title === b.title) {
-      return 0;
-    }
-
-    return a.title < b.title ? -1 : 1;
-  });
-}
-
-// 表示文字が何も残らない予定は通知対象から外す。
-function shouldNotifyCalendarEvent_(event) {
-  return !!((event.title || "").trim() || (event.description || "").trim());
-}
-
-// ログ用の日付キーを共通形式で出す。
-function formatDateKey_(date) {
-  return Utilities.formatDate(new Date(date), Session.getScriptTimeZone(), "yyyy/MM/dd");
-}
-
-// カレンダーリンクの表示形式を既定値へそろえる。
-function normalizeCalendarLinkView_(value) {
-  const allowed = ["day", "week", "month", "year"];
-  const normalized = String(isBlank_(value) ? "" : value).trim().toLowerCase();
-
-  return allowed.indexOf(normalized) === -1 ? "day" : normalized;
+  return settings.webhookUrl;
 }

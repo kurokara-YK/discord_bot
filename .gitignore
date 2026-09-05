@@ -4,13 +4,13 @@
 #   git update-index --skip-worktree .clasp.json
 # .clasp.json
 
-# 個人の設定値（Webhook URL / スプレッドシートのURL）
-# gas/config_english.js も同じくプレースホルダの状態で含めている。
-#   git update-index --skip-worktree gas/config_english.js
+# 個人の設定値（Webhook URL / スプレッドシートのURL / Discord ID）
+# gas/config_roster.js も同じくプレースホルダの状態で含めている。
+#   git update-index --skip-worktree gas/config_roster.js
 
-# 画像・教材の紙面など。著作権保護のためコミットしないこと
+# clasp の認証情報
+.clasprc.json
+
+# 画像など
 *.HEIC
 *.heic
-*.jpg
-*.jpeg
-*.png

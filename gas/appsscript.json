@@ -1,11 +1,7 @@
 {
   "timeZone": "Asia/Tokyo",
-  "oauthScopes": [
-    "https://www.googleapis.com/auth/calendar",
-    "https://www.googleapis.com/auth/script.external_request",
-    "https://www.googleapis.com/auth/script.storage"
-  ],
-  "dependencies": {},
+  "dependencies": {
+  },
   "exceptionLogging": "STACKDRIVER",
   "runtimeVersion": "V8"
 }

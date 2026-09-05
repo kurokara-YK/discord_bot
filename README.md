@@ -1,8 +1,8 @@
 <a name="readme-top"></a>
 
-# Googleカレンダー Discord リマインダーBOT
+# 当番リマインド Discord BOT
 
-Googleカレンダーの予定を，毎朝Discordへ自動で送るBOTです．
+Googleスプレッドシートに書いた当番表をもとに，担当者へDiscordでリマインドを送るBOTです．
 
 Googleアカウントがあれば無料で使えます．
 
@@ -14,16 +14,14 @@ Googleアカウントがあれば無料で使えます．
     <li><a href="#ドキュメント一覧">ドキュメント一覧</a></li>
     <li><a href="#使いはじめる">使いはじめる</a></li>
     <li><a href="#しくみ">しくみ</a></li>
-    <li><a href="#通知対象">通知対象</a></li>
-    <li><a href="#ラベルによる通知対象の制御">ラベルによる通知対象の制御</a></li>
-    <li><a href="#通知タイミング">通知タイミング</a></li>
-    <li><a href="#実行アカウントとカレンダー権限">実行アカウントとカレンダー権限</a></li>
-    <li><a href="#calendarapp-とセットアップ">CalendarApp とセットアップ</a></li>
+    <li><a href="#スプレッドシートの形式">スプレッドシートの形式</a></li>
+    <li><a href="#通知の条件">通知の条件</a></li>
+    <li><a href="#列と行の数を変える">列と行の数を変える</a></li>
     <li><a href="#設定項目一覧">設定項目一覧</a></li>
     <li><a href="#実行できる関数">実行できる関数</a></li>
     <li><a href="#ファイル構成">ファイル構成</a></li>
-    <li><a href="#clasp設定">clasp設定</a></li>
     <li><a href="#git管理上の注意">Git管理上の注意</a></li>
+    <li><a href="#うまくいかないとき">うまくいかないとき</a></li>
     <li><a href="#関連資料">関連資料</a></li>
     <li><a href="#作成者">作成者</a></li>
     <li><a href="#ライセンス">ライセンス</a></li>
@@ -32,50 +30,42 @@ Googleアカウントがあれば無料で使えます．
 
 ## どんなものか
 
-Googleカレンダーに入っている予定を，毎朝Discordへ自動で送るBOTです．
+「誰が」「いつ」当番なのかをスプレッドシートに書いておくと，
+このBOTが決まった日にDiscordへリマインドを送ってくれます．
 
-Googleアカウントがあれば**無料**で使えます．パソコンを起動しておく必要もありません．
+- 担当者を **Discordのメンションで呼び出す**ので，気づかれないまま当日を迎えることがない
+- 担当者は**プルダウンから選ぶ**ため，名前の打ち間違いが起きない
+- 担当者がいない回でも，`内容` を書いておけばイベント通知として送れる
+- 通知を送った回は**チェックボックスが自動で入る**ので，送信状況が一目で分かる
+- 当番表と名簿のスプレッドシートは**BOTが自動で作る**（手作業で列を作る必要がない）
 
-- 今日の予定と明日の予定を，1通のメッセージにまとめて送る
-- 予定の色（ラベル）で，通知する種類を絞り込める
-- 説明欄も指定した文字数まで一緒に表示する
-- 通知する時刻・内容はすべて設定で変えられる
+研究室のミーティング発表当番を想定して作っていますが，
+**掃除当番・司会当番・日直など「表に並んだ担当者を，決まった日にリマインドする」用途**であれば，
+設定ファイルの文面を書き換えるだけで使えます．
 
-Googleカレンダーには研究・打ち合わせ・私用・アルバイトなど複数の予定が混ざりがちです．
-その中から**必要な予定だけをDiscordへ再通知**して，見落としを防ぐことを目的にしています．
+**このリポジトリに当番表のデータは含まれていません．** 当番表と名簿は利用者が自分で用意します．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
 ## 届くメッセージ
 
-毎朝，その日と翌日の予定がまとめて1通で届きます．
+担当者がいる回:
 
 ```text
-## 📅 本日の予定
-### 2026年7月3日（金）
-
-**14:30〜16:00**
-> [会社タスク] 企画書のレビュー
-> └ 先方へ提出する企画書の内容を確認し、修正点を洗い出す...続きはカレンダー
-
-**20:00〜21:15**
-> [アルバイト] アルバイト
-
-[🔗 Googleカレンダーで確認](リンク)
-
----
-
-## 📅 明日の予定
-### 2026年7月4日（土）
-
-**10:00〜12:00**
-> [会社タスク] 定例会
-
-[🔗 Googleカレンダーで確認](リンク)
+来週の発表は@山田 太郎、@鈴木 花子です。よろしくお願いします。
+要旨添削は月曜日の13時までに提出しましょう。
+内容: S1
 ```
 
-`[ ]` の中は，予定の色に付けた名前です．説明欄は指定した文字数で切り詰めて表示します．
-末尾のリンクを開いたときの表示形式（日・週・月・年）は `calendarLinkView` で変えられます．
+担当者がいない回（`内容` だけが書かれている回）:
+
+```text
+@everyone 来週はガイダンスがあります。よろしくお願いします。
+要旨添削が必要な場合は月曜日の13時までに提出しましょう。
+```
+
+文面はすべて設定ファイルで変更できます．
+`{assignees}`（担当者のメンション），`{content}`（内容列），`{dutyDate}`（担当日）が使えます．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
@@ -85,8 +75,8 @@ Googleカレンダーには研究・打ち合わせ・私用・アルバイト�
 
 | ドキュメント | 読むタイミング | 内容 |
 | --- | --- | --- |
-| **[docs/getting_started.md](docs/getting_started.md)** | **まずここから** | セットアップ手順．WebhookのURL取得から自動送信の設定まで，画面操作の順に説明しています．**プログラミングの知識は不要です** |
-| [docs/label_setup.md](docs/label_setup.md) | 予定を絞り込みたいとき | 色でラベルを見分けるしくみの詳しい説明．うまく動かないときの調べ方 |
+| **[docs/getting_started.md](docs/getting_started.md)** | **まずここから** | セットアップ手順．WebhookのURL取得から自動送信の設定まで，画面操作の順に説明しています |
+| [docs/sheet_format.md](docs/sheet_format.md) | 当番表を書くとき | 当番表と名簿の書き方．日付の入力方法や，担当者プルダウンの使い方 |
 | [docs/development_environment.md](docs/development_environment.md) | コードを編集したいとき | claspを使い，パソコン上のエディタでコードを編集するための環境構築手順．BOTを動かすだけなら不要です |
 
 このREADMEは，**機能と設定項目のリファレンス**です．
@@ -96,375 +86,219 @@ Googleカレンダーには研究・打ち合わせ・私用・アルバイト�
 
 ## 使いはじめる
 
-はじめて使う場合は [docs/getting_started.md](docs/getting_started.md) を開いてください．
-所要時間は30分〜1時間です．
+大まかな流れは次のとおりです．画面ごとの手順は
+[docs/getting_started.md](docs/getting_started.md) を参照してください．
 
-大まかな流れは次のとおりです．
-
-```text
-1. Discord で Webhook URL を取得する
-2. （必要なら）カレンダーの予定に色を付ける
-3. Apps Script にコードを貼り付ける
-4. config_calendar.js に Webhook URL を書く
-5. test_send_discord_message でテスト送信する
-6. （必要なら）sync_calendar_label_registry でラベルを覚えさせる
-7. calendar_reminder_main で手動送信を確認する
-8. トリガーを設定して自動化する
-```
+1. DiscordでWebhook URLを取得する
+2. Apps Scriptにコードを反映する
+3. `create_roster_spreadsheet` を実行して当番表を作る
+4. 出力されたURLを `gas/config_roster.js` に貼り付ける
+5. 名簿に名前とDiscord IDを入力する
+6. 当番表に日付と担当者を入力する
+7. `preview_message` で送信内容を確認する
+8. トリガーを設定して自動送信を始める
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
 ## しくみ
 
 ```text
-Googleカレンダー          Google Apps Script            Discord
-  今日の予定      →      毎朝1回，予定を読んで    →     メッセージが届く
-  明日の予定             メッセージを組み立てる
+Googleスプレッドシート   … 当番表（誰がいつ担当か）と名簿（名前とDiscord ID）
+        ↓
+Google Apps Script      … 通知日になったら表を読んで本文を組み立てる
+        ↓
+Discord Webhook         … チャンネルへ通知が届く
 ```
 
-- 実行基盤は Google Apps Script（GAS）
-- カレンダーの読み取りは GAS 組み込みの `CalendarApp`（Google Cloud の設定は不要）
-- Discord への送信は Webhook
-- 実行タイミングは GAS の時間主導型トリガー
+**Google Apps Script（GAS）** はGoogleが無料で提供している
+「Googleのサーバー上でプログラムを動かす仕組み」です．
+自分のパソコンの電源が切れていても，設定した時刻に自動で動きます．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
-## 通知対象
+## スプレッドシートの形式
 
-対象とするカレンダーは，`calendarId` に指定した1件です．
+BOTが作るスプレッドシートには，**当番表**と**名簿**の2つのシートがあります．
 
-### 対象
+### 当番表シート
 
-- `calendarId: "primary"` による自分のメインカレンダー
-- `calendarId` に指定した共有カレンダーやサブカレンダー
+1行目が見出し，2行目以降がデータです．
 
-### 対象外
+| 列 | 項目 | 内容 |
+| --- | --- | --- |
+| A列 | `No.` | 回番号．`なし`，`補講` などの文字も入れられる |
+| B列 | `担当日` | 当番を担当する日 |
+| C列 | `通知日` | この日にDiscordへ通知する．空欄なら担当日から自動計算 |
+| D〜K列 | `1人目`〜`8人目` | 担当者．**プルダウンから選ぶ**．いない回は空欄 |
+| L列 | `内容` | S1，ガイダンスなど．**通知文に載る** |
+| M列 | `メモ` | 自由記入欄．**通知には使わない** |
+| N列 | `通知済み` | 通知を送るとチェックが入る．**外すともう一度送れる** |
 
-- 同時に複数のカレンダーを巡回する使い方
-- 実行時にログインユーザーを切り替えて別人の `primary` を読む使い方
+記入例:
 
-現在の実装では，`calendarId` に指定できる対象は1つだけです．
+| No. | 担当日 | 通知日 | 1人目 | 2人目 | 内容 | メモ | 通知済み |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 1 | 2026/09/17 | 2026/09/11 | | | ガイダンス | 新入生歓迎会もあり | ☑ |
+| 2 | 2026/09/24 | 2026/09/18 | 山田 太郎 | 鈴木 花子 | S1 | | ☐ |
 
-<p align="right">(<a href="#readme-top">上に戻る</a>)</p>
+`内容` と `メモ` の違いは，**Discordへ送られるかどうか**です．
+通知したい情報は `内容` に，自分たちの覚え書きは `メモ` に書きます．
 
-## ラベルによる通知対象の制御
+日付のセルを**ダブルクリックするとカレンダーが開き**，そこから選べます．
+`9/17` のように年を省略して入力することもできます．
+その場合の年は設定の `fiscalStartYear` から決まり，
+年度開始月より前の月は翌年になります（2026年度なら `1/7` は2027年）．
 
-Googleカレンダーの予定に付けた色で，通知する予定を絞り込めます．
+### 名簿シート
 
-ただし Googleカレンダーは，ラベルに付けた名前をプログラムへ渡してくれません．
-届くのは色を表す値だけです．そのため初回だけ「そのラベルを付けた既存予定」を1件指定して，
-BOTに「この予定と同じ色を，この名前で呼ぶ」と教えます．
+| 列 | 項目 | 内容 |
+| --- | --- | --- |
+| A列 | `名前` | 当番表のプルダウンに出る名前 |
+| B列 | `Discord ID` | メンション用のユーザーID |
+| C列 | `メモ` | 学年など．BOTは読まない |
 
-設定するのは `gas/config_labels.js` の2か所です．
+DiscordユーザーIDは，Discordの「設定」→「詳細設定」→「開発者モード」をオンにしてから，
+ユーザーを右クリック →「ユーザーIDをコピー」で取得できます．
 
-```js
-// 1. 通知したいラベル名
-const CALENDAR_REMINDER_LABELS = [
-  "会社タスク",
-  "アルバイト"
-];
-
-// 2. 各ラベルの色を覚えさせるための見本の予定
-const CALENDAR_LABEL_REGISTRY_SEEDS = [
-  {
-    labelName: "会社タスク",
-    sampleEventTitle: "定例ミーティング",
-    sampleDate: "2026/07/05"
-  }
-];
-```
-
-`gas/config_calendar.js` で `targetEventLabels` を切り替えると有効になります．
-
-```js
-targetEventLabels: CALENDAR_REMINDER_LABELS,   // 絞り込む
-targetEventLabels: false,                      // すべての予定を通知
-```
-
-書いたあと `sync_calendar_label_registry` を1回実行すると，色を覚えます．
-覚えた内容は Script Properties に保存されるため，見本の予定はあとで削除しても構いません．
-
-- 色はパレットのものでも，カラーピッカーで作ったものでも使えます
-- ただし別々のラベルに同じ色を使うと区別できません
-- `デフォルト` という名前は特別で，色なしの予定に自動で割り当てられます
-
-**しくみの詳細・設定の書き方・うまく動かないときの調べ方は
-[docs/label_setup.md](docs/label_setup.md) にあります．**
+IDが空欄の人は，メンションされず名前だけで通知されます．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
-## 通知タイミング
+## 通知の条件
 
-通知は「当日分」と「翌日分」の2種類で，どちらも `gas/config_calendar.js` で切り替えます．
+`duty_roster_main()` は，**通知日が来ていて，まだ送っていない回**を送ります．
 
-```js
-enableTodayReminder: true,      // 当日の予定を通知する
-enableTomorrowReminder: true,   // 翌日の予定を通知する
-```
-
-実行するのは `calendar_reminder_main` の1つだけです．
-この関数は実行時に上の2つを見て，当日分を先に，翌日分を後に置き，
-**1回のメッセージへまとめて送ります．** 両方 `true` でも送信は1回です．
-
-通知時刻は GAS の時間主導型トリガーで決まります．コード側に時刻の設定はありません．
-トリガーの作り方は [docs/getting_started.md](docs/getting_started.md) の手順8にあります．
-
-> **注意**
-> GAS の時間主導型トリガーは，指定した時間帯の中で実行されます．
-> 「午前7時〜8時」を選ぶと 7:00 ちょうどではなく 7:23 などになります．
->
-> また，このBOTには「同じ日に何度も送らない」制御がありません．
-> **1時間おきのトリガーにすると1時間ごとに再通知されます．**
-> 必ず「日付ベースのタイマー」を選んでください．
-
-<p align="right">(<a href="#readme-top">上に戻る</a>)</p>
-
-## 実行アカウントとカレンダー権限
-
-このBOTは「ログインした人を自動判定してその人のカレンダーを読むBOT」ではありません．Apps Script を認可してトリガーを作成した Google アカウントの権限で動きます．
-
-`calendarId: "primary"` の場合は，その実行アカウント自身のメインカレンダーを読みます．
-
-また，`calendarId` に特定のカレンダーIDを入れた場合は，その実行アカウントが閲覧権限を持ち，かつ必要に応じてラベルを扱える1件のカレンダーを読みます．
-
-つまり，現在の実装でできることは次です．
-
-- 自分のメインカレンダーを通知する
-- 自分が閲覧できる共有カレンダーやサブカレンダーを1件だけ通知する
-
-現在の実装でできないことは次です．
-
-- 実行時にログインユーザーを切り替えて別人の `primary` を読む
-- 1つのトリガーで複数ユーザーの個人カレンダーをまとめて巡回する
-- ユーザーごとにOAuthログインさせて個別設定を持つSaaS風の運用
-
-個人利用の範囲を少し広げたい場合は，次の方法が現実的です．
-
-- 共有カレンダーを1つ作り，そのカレンダーIDを `calendarId` に設定する
-- 通知専用のGoogleアカウントを1つ用意し，対象カレンダーをそのアカウントに共有して，そのアカウントでトリガーを作る
-
-より本格的に「ログインした各ユーザーのカレンダーをそれぞれ通知したい」場合は，GAS 単体よりも，OAuthログイン，ユーザーごとのトークン保存，定期実行基盤を持つサーバーアプリ構成のほうが向いています．
-
-<details>
-  <summary>このBOTが実際に誰の権限で動くか</summary>
-
-- `calendarId: "primary"` は「そのときブラウザで見ている人」ではなく，「Apps Script を認可してトリガーを作った Google アカウント」のメインカレンダーを意味します
-- 手動実行でもトリガー実行でも，基本的にはそのスクリプトを認可したアカウント権限でカレンダーが読まれます
-- そのため，別の人の `primary` を勝手に読めるわけではありません
-
-</details>
-
-<details>
-  <summary>calendarId に設定できる値</summary>
-
-- `primary`
-- 自分のメインカレンダーのメールアドレス形式のID
-- 共有カレンダーやサブカレンダーの `xxxxxxxxxxxx@group.calendar.google.com` 形式のID
-
-カレンダーIDは Googleカレンダーの次の場所で確認できます．
-
-- 設定
-- マイカレンダーの設定
-- 対象カレンダー
-- カレンダーの統合
-- カレンダー ID
-
-</details>
-
-<details>
-  <summary>他人のカレンダーを読める条件</summary>
-
-次のいずれかに当てはまるカレンダーだけを読めます．
-
-- 実行アカウント本人のカレンダー
-- 実行アカウントへ共有されているカレンダー
-- 公開設定されているカレンダー
-- 適切な権限付与が済んでいるカレンダー
-
-逆に，`calendarId` に他人のメールアドレスを書いただけでは予定は取得できません．権限がなければ API エラーになります．
-
-</details>
-
-<details>
-  <summary>初回実行時の承認について</summary>
-
-Googleカレンダーは個人情報を含むため，このBOTを初回実行すると Google の承認画面が出ます．
-
-`CalendarApp` を使っているので，事前の設定作業はありません．画面の指示にしたがって「許可」を押すだけです．
-
-他の人がこのBOTを使う場合は，その人が自分の Apps Script プロジェクトを持ち，自分のアカウントで承認します．
-
-</details>
-
-<p align="right">(<a href="#readme-top">上に戻る</a>)</p>
-
-## CalendarApp とセットアップ
-
-このBOTは GAS 組み込みの `CalendarApp` でカレンダーを読みます．Google Calendar API を直接叩いていないため，**Google Cloud 側の設定は一切不要です．**
-
-### 必要ないもの
-
-- Google Cloud プロジェクトの作成
-- Google Calendar API の有効化
-- Apps Script への Cloud プロジェクト番号の紐付け
-- OAuth 同意画面の設定・テストユーザーの登録
-
-これらは，公開APIである Calendar API を外部から叩くときに必要になる手続きです．`CalendarApp` は GAS の中から Google のサービスへ直接アクセスするため，どれも必要ありません．
-
-### 必要なこと
-
-初回実行時に承認画面が出るので，「許可」を押すだけです．Apps Script が自動的に画面を出すので，事前の登録作業はありません．
-
-承認するスコープは `gas/appsscript.json` に書かれた次の3つです．
-
-| スコープ | 用途 |
+| 条件 | 動作 |
 | --- | --- |
-| `calendar` | `CalendarApp` によるカレンダー読み取り |
-| `script.external_request` | Discord Webhook への送信 |
-| `script.storage` | Script Properties へのラベルレジストリ保存 |
+| 担当者が1人以上いる | 担当者へメンション付きで通知 |
+| 担当者はいないが `内容` がある | イベント情報として通知 |
+| 担当者も `内容` も無い | 何も送らない |
+| `担当日` も `通知日` も空 | 何もしない（予定が決まれば処理される） |
+| `通知済み` にチェックがある | 送信済みとしてスキップ |
 
-`CalendarApp` は読み取りだけの用途でも `calendar` スコープを要求します．
+**毎日実行して構いません．** 通知日でない日は何も送られません．
 
-### config に書く値
+### 通知済みチェックボックス
 
-`gas/config_calendar.js` に書くのは `calendarId`，Webhook URL，通知条件です．Cloud のプロジェクト番号やプロジェクトIDを書く場所はありません．
+通知を送ると，その回の `通知済み` 列に**自動でチェックが入ります．**
+同じ回が二度送られることはありません．
 
-<details>
-  <summary>以前 Calendar API を使っていた頃の設定について</summary>
+**もう一度送りたい回は，チェックを外すだけです．**
 
-このBOTは以前 Google Calendar API v3 を `UrlFetchApp` で直接叩いていました．当時は Google Cloud プロジェクトの作成と Calendar API の有効化が必須で，設定を忘れると次のエラーが出ていました．
+<p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
-```text
-SERVICE_DISABLED
-Google Calendar API has not been used in project ... before or it is disabled.
+## 列と行の数を変える
+
+担当者の人数と当番表の行数は，`gas/config_roster.js` で決まります．
+
+```js
+assigneeColumnCount: 8,   // 「1人目」〜「8人目」の8列を作る
+rosterRowCount: 20,       // データ行を20行用意する
 ```
 
-`CalendarApp` へ移行したため，このエラーは発生しなくなりました．過去に作った Google Cloud プロジェクトが残っていても，このBOTの動作には影響しません．
+`assigneeColumnCount` を変えると，**列が自動で増減し，
+右にある `内容`・`メモ`・`通知済み` の位置もずれます．** 列を手で足す必要はありません．
 
-なお，API を使っていた当初の目的は「Googleカレンダー UI のラベル名を取得すること」でしたが，実測の結果 API からもラベル名は返らないことが分かったため，API を使う理由がなくなりました．現在は `CalendarApp` だけで動作します．
+| 設定値 | できる列 | 合計 |
+| --- | --- | --- |
+| `4` | No. / 担当日 / 通知日 / 1人目〜4人目 / 内容 / メモ / 通知済み | 10列 |
+| `8` | No. / 担当日 / 通知日 / 1人目〜8人目 / 内容 / メモ / 通知済み | 14列 |
+| `12` | No. / 担当日 / 通知日 / 1人目〜12人目 / 内容 / メモ / 通知済み | 18列 |
 
-</details>
+変更したら `create_roster_spreadsheet` でシートを作り直します．
+**運用中のシートに実行すると入力済みの内容が消える**ため，
+新しい学期を始めるときなどに行ってください．
+
+行が足りなくなった場合は，シート上で行を追加しても構いません．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
 ## 設定項目一覧
 
-`gas/config_calendar.js` で設定できる項目の一覧です．
+`gas/config_roster.js` で設定します．
 
-| 項目 | 既定値 | 意味 |
-| --- | --- | --- |
-| `webhookUrl` | プレースホルダ | Discord の Webhook URL．**必ず自分の値に書き換える** |
-| `calendarId` | `"primary"` | 読み取るカレンダー．`"primary"` は実行アカウントのメインカレンダー |
-| `targetEventLabels` | `false` | 通知対象のラベル名．`false` ならすべての予定を通知 |
-| `enableTomorrowReminder` | `true` | 明日の予定を通知するか |
-| `enableTodayReminder` | `true` | 今日の予定を通知するか |
-| `notifyIfEmpty` | `false` | 予定が0件の日も「予定はありません」と通知するか |
-| `showDescription` | `true` | 予定の説明欄をメッセージに含めるか |
-| `descriptionMaxLength` | `80` | 説明欄を何文字で切り詰めるか |
-| `calendarLinkView` | `"week"` | メッセージ末尾のリンクを開いたときの表示形式．`"day"` / `"week"` / `"month"` / `"year"` |
-| `calendarUrlBase` | Googleカレンダーの URL | メッセージ末尾のリンクのベースURL |
+### 接続先
 
-`gas/config_labels.js` で設定できる項目は次の2つです．
-
-| 項目 | 意味 |
+| 設定名 | 説明 |
 | --- | --- |
-| `CALENDAR_REMINDER_LABELS` | 通知したいラベル名の一覧 |
-| `CALENDAR_LABEL_REGISTRY_SEEDS` | 各ラベル名に対応する「見本の予定」の指定 |
+| `label` | 実行ログに出る表示名 |
+| `webhookUrl` | DiscordのWebhook URL |
+| `spreadsheetId` | 当番表スプレッドシートのURL |
+| `templateFolderId` | 作成先のGoogleドライブのフォルダURL |
 
-詳しくは [docs/label_setup.md](docs/label_setup.md) を参照してください．
+### シート
+
+| 設定名 | 説明 |
+| --- | --- |
+| `fileName` | 作成されるスプレッドシートの名前 |
+| `rosterSheetName` | 当番表シート名 |
+| `memberSheetName` | 名簿シート名 |
+| `assigneeColumnCount` | 担当者列の数 |
+| `rosterRowCount` | 当番表に用意する行数 |
+
+### 日付
+
+| 設定名 | 説明 |
+| --- | --- |
+| `fiscalStartYear` | 年度の開始年．年を省略した日付に年を補うために使う |
+| `fiscalStartMonth` | 年度の開始月．日本の年度なら `4` |
+| `noticeOffsetDays` | 通知日が空のとき，担当日の何日前とみなすか |
+
+### 文面
+
+| 設定名 | 説明 |
+| --- | --- |
+| `assigneeMessageTemplate` | 担当者がいる回の文面 |
+| `contentSuffixTemplate` | 担当者がいる回に，内容を末尾へ足す文面 |
+| `eventMessageTemplate` | 内容だけの回の文面 |
+| `unknownMemberTemplate` | Discord IDが未登録の人の表示 |
+| `assigneeSeparator` | 担当者メンションのつなぎ文字 |
+
+文面では次の変数が使えます．
+
+| 変数 | 内容 |
+| --- | --- |
+| `{assignees}` | 担当者のメンション |
+| `{content}` | 内容列の値 |
+| `{dutyDate}` | 担当日（例: `9月24日`） |
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
 ## 実行できる関数
 
-Apps Script の実行画面やトリガー設定で選べる関数です．
+Apps Scriptエディタの「実行する関数」から選べます．
 
-| 関数名 | できること | 主な用途 |
-| --- | --- | --- |
-| `calendar_reminder_main` | 当日通知を先に，前日通知を後に，1回のメッセージへまとめて送信する | **本番トリガーの実行関数** |
-| `calendar_today_reminder_main` | 当日通知だけを作成して送信する | 当日通知だけを個別に動かしたい確認用 |
-| `calendar_tomorrow_reminder_main` | 前日通知だけを作成して送信する | 前日通知だけを個別に動かしたい確認用 |
-| `test_send_discord_message` | 固定のテスト文面を Discord に送る | Webhook 接続確認 |
-| `sync_calendar_label_registry` | 見本の予定から「色 ↔ ラベル名」の対応を覚え直す | 初回設定・色変更後の再同期用 |
-| `clear_calendar_label_registry` | 保存済みの対応表を空に戻す | 対応表の作り直し用 |
-| `inspect_calendar_labels` | 対応表と各予定の色番号を実行ログに出力する | ラベル診断用 |
+| 関数 | 用途 |
+| --- | --- |
+| `duty_roster_main` | **本番用．** トリガーにはこれを設定する |
+| `create_roster_spreadsheet` | 当番表と名簿を新規作成する（**最初の1回だけ**） |
+| `preview_message` | 今日送られる本文を確認する（**送信しない**） |
+| `check_settings` | 設定・シート・名簿の登録漏れを確認する |
+| `test_send_discord` | Discordへ届くかだけ確かめる |
 
-通常運用でトリガーに設定するのは **`calendar_reminder_main`** です．
+動作を変えたときは，まず `preview_message` で確認してください．
+送信も記録も行わないため，何度でも安全に試せます．
 
-> **注意**
-> どの関数も，実行すると**実際にDiscordへ送信されます．**
-> 文面だけ確認したい場合は，`webhookUrl` を一時的にテスト用チャンネルのものへ差し替えてください．
-
-<p align="right">(<a href="#readme-top">上に戻る</a>)</p>
-
-## clasp設定
-
-`clasp` を使うと，パソコン上のエディタでコードを編集して GAS へ送れます．
-
-- `.clasp.json` にスクリプトIDを書く（プレースホルダ入りで同梱しています）
-- `clasp push` の送信対象は `rootDir` の指定により `gas/` 配下だけ
-- `gas/appsscript.json` に必要な3つのスコープを記載済み
-
-環境構築の手順は [docs/development_environment.md](docs/development_environment.md) にあります．
-BOTを動かすだけなら clasp は不要です．
+`create_roster_spreadsheet` は**最初の1回だけ**使います．
+運用中のシートへ実行すると入力済みの内容が消えます．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
 ## ファイル構成
 
 <details>
-  <summary>ディレクトリ構成</summary>
+  <summary>各ファイルの説明を開く</summary>
 
-```text
-.
-├── .clasp.json
-├── .gitignore
-├── README.md
-├── docs
-│   ├── development_environment.md
-│   ├── getting_started.md
-│   └── label_setup.md
-└── gas
-    ├── appsscript.json
-    ├── calendar_api.js
-    ├── calendar_diagnostics.js
-    ├── calendar_formatters.js
-    ├── calendar_labels.js
-    ├── config_calendar.js
-    ├── config_labels.js
-    ├── label_registry.js
-    ├── main.js
-    ├── reminder_builders.js
-    ├── send_discord.js
-    ├── settings_resolver.js
-    └── utils.js
-```
-
-</details>
-
-<details>
-  <summary>ファイルごとの役割</summary>
-
-| パス | 役割 |
+| ファイル | 説明 |
 | --- | --- |
-| `README.md` | プロジェクト全体の入口となるメイン説明書 |
-| `docs/getting_started.md` | セットアップ手順．初めて使う人向け |
-| `docs/label_setup.md` | ラベル（色）のしくみと調べ方 |
-| `docs/development_environment.md` | clasp を使う開発環境の構築手順 |
-| `.clasp.json` | GASプロジェクト紐付け設定（スクリプトIDを書き込む） |
-| `gas/appsscript.json` | GAS プロジェクトのマニフェスト |
-| `gas/calendar_api.js` | `CalendarApp` によるカレンダー取得とイベント取得 |
-| `gas/calendar_diagnostics.js` | レジストリと各予定の `colorId` を調べる診断ログ |
-| `gas/calendar_formatters.js` | 日時整形，説明文整形，Discord本文生成 |
-| `gas/calendar_labels.js` | 通知対象ラベル名の判定とイベント絞り込み |
-| `gas/config_calendar.js` | カレンダーBOT向けの主要設定 |
-| `gas/config_labels.js` | 通知対象ラベル一覧とラベル同期用サンプル予定の設定 |
-| `gas/label_registry.js` | Script Properties に保存するラベルレジストリの管理 |
-| `gas/main.js` | Apps Script から実行する入口関数 |
-| `gas/reminder_builders.js` | 前日通知・当日通知の payload 組み立て |
-| `gas/send_discord.js` | Discord Webhook 送信処理 |
-| `gas/settings_resolver.js` | ユーザー設定を実行用設定へ正規化し，Webhook設定も検証する |
-| `gas/utils.js` | 小さい共通関数だけをまとめた補助ファイル |
+| `gas/appsscript.json` | GASプロジェクトの設定．タイムゾーン，ログ出力，V8ランタイムを定義します |
+| `gas/config_roster.js` | **利用者が編集する設定ファイル．** Webhook URL，シート名，文面テンプレート |
+| `gas/main.js` | エントリーポイント．Apps Scriptの実行メニューに出る関数をまとめています |
+| `gas/roster.js` | 当番表と名簿の読み取り，送信対象の判定，Discord本文の組み立て |
+| `gas/columns_def.js` | 当番表と名簿の行・列構造の定義．列位置はすべてここから計算されます |
+| `gas/spreadsheet_template.js` | スプレッドシートの新規作成，書式設定，プルダウンの設定 |
+| `gas/send_discord.js` | Discord WebhookへのPOST送信 |
+| `gas/utils.js` | 日付・文字列の共通処理と，設定値の読み取り |
 
 </details>
 
@@ -472,21 +306,46 @@ BOTを動かすだけなら clasp は不要です．
 
 ## Git管理上の注意
 
-`.clasp.json` や Webhook URL など，環境依存情報や秘密情報は Git に含めないようにしてください．
+`.clasp.json` と `gas/config_roster.js` は，
+**プレースホルダの状態でリポジトリに含めています．**
 
-`git status` で `.clasp.json` がGitの管理対象に含まれていないことを確認してください．
+自分のスクリプトIDやWebhook URLを書き込んだあとは，
+次のコマンドで変更が追跡されないようにしてください．
 
 ```sh
-git status
+git update-index --skip-worktree .clasp.json
+git update-index --skip-worktree gas/config_roster.js
 ```
+
+> **注意**
+> Webhook URLを知っている人は，そのDiscordチャンネルへメッセージを送信できます．
+> URLを他人に共有したり，公開リポジトリに載せたりしないでください．
+> 誤って公開した場合は，Discord側でそのウェブフックを削除して作り直してください．
+
+詳しくは [docs/development_environment.md](docs/development_environment.md) の
+「Git 管理上の注意」を参照してください．
+
+<p align="right">(<a href="#readme-top">上に戻る</a>)</p>
+
+## うまくいかないとき
+
+まず `check_settings` を実行し，実行ログを確認してください．
+
+| 症状 | 確認すること |
+| --- | --- |
+| 通知が飛ばない | `preview_message` で今日が対象日か．`通知済み` にチェックが付いていないか |
+| メンションされない | `check_settings` で名簿の登録漏れを確認する |
+| シートが見つからない | `rosterSheetName` が実際のタブ名と一致しているか |
+| 日付が1年ずれる | `fiscalStartYear` が正しい年度か．年をまたぐ学期は特に注意 |
+| 担当者が入力できない | プルダウンのため名簿に無い名前は入らない．名簿へ追加する |
+| 担当者の列が足りない | `assigneeColumnCount` を増やしてシートを作り直す |
+| もう一度送りたい | `通知済み` のチェックを外す |
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
 ## 関連資料
 
 - [Google Apps Script 公式ドキュメント](https://developers.google.com/apps-script)
-- [Apps Script CalendarApp](https://developers.google.com/apps-script/reference/calendar/calendar-app)
-- [Apps Script CalendarEvent](https://developers.google.com/apps-script/reference/calendar/calendar-event)
 - [Apps Script のトリガー](https://developers.google.com/apps-script/guides/triggers/installable)
 - [Discord — Webhookの使い方（公式ヘルプ）](https://support.discord.com/hc/ja/articles/228383668)
 - [clasp - GitHub](https://github.com/google/clasp)
@@ -500,11 +359,8 @@ git status
 | 作成者 | kurokara-YK |
 | 連絡先 | kurokara1226@gmail.com |
 | リンク集 | https://lit.link/kurokara |
-| リポジトリ | https://github.com/kurokara-YK/google_calendar_discord_bot |
 
-不具合の報告や改善の提案は，
-[Issues](https://github.com/kurokara-YK/google_calendar_discord_bot/issues)
-または上記のメールアドレスまでお願いします．
+不具合の報告や改善の提案は，Issues または上記のメールアドレスまでお願いします．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
