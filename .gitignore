@@ -4,9 +4,9 @@
 #   git update-index --skip-worktree .clasp.json
 # .clasp.json
 
-# 個人の設定値（Webhook URL / スプレッドシートのURL / Discord ID）
-# gas/config_roster.js も同じくプレースホルダの状態で含めている。
-#   git update-index --skip-worktree gas/config_roster.js
+# 個人の設定値（Webhook URL / スプレッドシートのURL / フォルダのURL）
+# gas/config_shift.js も同じくプレースホルダの状態で含めている。
+#   git update-index --skip-worktree gas/config_shift.js
 
 # clasp の認証情報
 .clasprc.json
