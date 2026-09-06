@@ -21,6 +21,7 @@ function createEmptyCalendarLabelRegistry_() {
   return {
     version: 1,
     updatedAt: "",
+    calendarId: "",
     entriesByNameKey: {}
   };
 }
@@ -87,30 +88,55 @@ function getConfiguredCalendarLabelNames_() {
 }
 
 // Script Properties から保存済みレジストリを読む。
-function getStoredCalendarLabelRegistry_() {
+// expectedCalendarId を渡すと，別カレンダーで覚えた色を引き継がないよう空へ戻す。
+function getStoredCalendarLabelRegistry_(expectedCalendarId) {
   const raw = PropertiesService.getScriptProperties().getProperty(CALENDAR_LABEL_REGISTRY_PROPERTY_KEY);
+  const wantedCalendarId = isBlank_(expectedCalendarId) ? "" : String(expectedCalendarId).trim();
 
   if (isBlank_(raw)) {
-    return createEmptyCalendarLabelRegistry_();
+    const empty = createEmptyCalendarLabelRegistry_();
+    empty.calendarId = wantedCalendarId;
+    return empty;
   }
+
+  let parsed;
 
   try {
-    const parsed = JSON.parse(raw);
-    const registry = createEmptyCalendarLabelRegistry_();
-
-    registry.version = parsed.version || 1;
-    registry.updatedAt = String(parsed.updatedAt || "");
-    registry.entriesByNameKey = parsed.entriesByNameKey || {};
-    return registry;
+    parsed = JSON.parse(raw);
   } catch (error) {
     Logger.log("getStoredCalendarLabelRegistry_: 保存済みJSONの解析に失敗したため空レジストリへ戻します。reason=" + error.message);
-    return createEmptyCalendarLabelRegistry_();
+    const broken = createEmptyCalendarLabelRegistry_();
+    broken.calendarId = wantedCalendarId;
+    return broken;
   }
+
+  const registry = createEmptyCalendarLabelRegistry_();
+
+  registry.version = parsed.version || 1;
+  registry.updatedAt = String(parsed.updatedAt || "");
+  registry.calendarId = String(parsed.calendarId || "");
+  registry.entriesByNameKey = parsed.entriesByNameKey || {};
+
+  // 色番号はカレンダーごとの意味しか持たない。
+  // 対象カレンダーが変わったら覚え直させる。
+  if (wantedCalendarId && registry.calendarId !== wantedCalendarId) {
+    Logger.log(
+      "getStoredCalendarLabelRegistry_: 対象カレンダーが変わったためレジストリを破棄します。" +
+      "storedCalendarId=" + (registry.calendarId || "(未記録)")
+    );
+
+    const reset = createEmptyCalendarLabelRegistry_();
+    reset.calendarId = wantedCalendarId;
+    return reset;
+  }
+
+  return registry;
 }
 
 // Script Properties へレジストリを書き戻す。
 function saveCalendarLabelRegistry_(registry) {
   registry.updatedAt = new Date().toISOString();
+  registry.calendarId = isBlank_(registry.calendarId) ? "" : String(registry.calendarId).trim();
   PropertiesService.getScriptProperties().setProperty(
     CALENDAR_LABEL_REGISTRY_PROPERTY_KEY,
     JSON.stringify(registry)
@@ -331,10 +357,13 @@ function syncCalendarLabelRegistry_(settings, options) {
   settings = requireCalendarReminderSettings_(settings || getCalendarReminderSettings_(), "syncCalendarLabelRegistry_");
   options = options || {};
 
-  const registry = getStoredCalendarLabelRegistry_();
+  const targetCalendarId = getTargetCalendarId_(settings);
+  const registry = getStoredCalendarLabelRegistry_(targetCalendarId);
   const seeds = getCalendarLabelRegistrySeeds_();
   const configuredLabelNames = getConfiguredCalendarLabelNames_();
-  let changed = false;
+  let changed = registry.calendarId !== targetCalendarId;
+
+  registry.calendarId = targetCalendarId;
 
   changed = pruneCalendarLabelRegistryEntries_(registry, configuredLabelNames) || changed;
   changed = ensureConfiguredCalendarLabelEntries_(registry, configuredLabelNames) || changed;

@@ -7,7 +7,7 @@
 // レジストリ内容を Logger に出す。
 function logCalendarLabelRegistry_(config) {
   const seeds = getCalendarLabelRegistrySeeds_();
-  const registry = getStoredCalendarLabelRegistry_();
+  const registry = getStoredCalendarLabelRegistry_(getTargetCalendarId_(config));
   const lookup = buildCalendarLabelRegistryLookup_(registry);
 
   Logger.log("=== 保存済みラベルレジストリ ===");
@@ -43,7 +43,7 @@ function logCalendarLabelRegistry_(config) {
 // レジストリと各予定の colorId をまとめて診断ログへ出す。
 function logCalendarLabelDiagnostics_(config, targetDate) {
   const settings = requireCalendarReminderSettings_(config, "logCalendarLabelDiagnostics_");
-  const labelLookup = buildCalendarLabelRegistryLookup_(getStoredCalendarLabelRegistry_());
+  const labelLookup = buildCalendarLabelRegistryLookup_(getStoredCalendarLabelRegistry_(getTargetCalendarId_(settings)));
   const resolvedTargetDate = normalizeToDayStart_(targetDate || getTargetDateByOffsetDays_(0));
   const events = getCalendarEventsForDate_(settings, resolvedTargetDate, labelLookup);
 

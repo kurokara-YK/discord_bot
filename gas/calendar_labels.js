@@ -6,7 +6,7 @@
 
 // 保存済みレジストリから lookup を組み立てる。
 function buildCalendarLabelLookup_(config) {
-  const registry = getStoredCalendarLabelRegistry_();
+  const registry = getStoredCalendarLabelRegistry_(getTargetCalendarId_(config));
   const lookup = buildCalendarLabelRegistryLookup_(registry);
   const targetLabelNameKeys = normalizeStringList_(config.targetEventLabels).map(function(labelName) {
     return normalizeCalendarLabelNameKey_(labelName);
