@@ -153,6 +153,7 @@ function createCalendarLabelRegistryEntry_(labelName) {
   return {
     labelName: String(labelName || "").trim(),
     colorId: "",
+    eventLabelId: "",
     sampleEventTitle: "",
     sampleDate: "",
     source: "",
@@ -173,6 +174,7 @@ function upsertCalendarLabelRegistryEntry_(registry, partialEntry) {
   const next = Object.assign({}, current, partialEntry, {
     labelName: labelName,
     colorId: isBlank_(partialEntry.colorId) ? (current.colorId || "") : String(partialEntry.colorId).trim(),
+    eventLabelId: isBlank_(partialEntry.eventLabelId) ? (current.eventLabelId || "") : String(partialEntry.eventLabelId).trim(),
     sampleEventTitle: isBlank_(partialEntry.sampleEventTitle) ? (current.sampleEventTitle || "") : String(partialEntry.sampleEventTitle).trim(),
     sampleDate: isBlank_(partialEntry.sampleDate) ? (current.sampleDate || "") : String(partialEntry.sampleDate).trim(),
     source: isBlank_(partialEntry.source) ? (current.source || "") : String(partialEntry.source).trim(),
@@ -229,6 +231,7 @@ function pruneCalendarLabelRegistryEntries_(registry, labelNames) {
 function buildCalendarLabelRegistryLookup_(registry) {
   const entriesByNameKey = {};
   const labelNamesByColorId = {};
+  const labelNamesByEventLabelId = {};
   const collisions = [];
   let defaultLabelName = "";
 
@@ -243,6 +246,10 @@ function buildCalendarLabelRegistryLookup_(registry) {
 
     if (isDefaultCalendarLabelName_(entry.labelName)) {
       defaultLabelName = entry.labelName;
+    }
+
+    if (entry.eventLabelId) {
+      labelNamesByEventLabelId[String(entry.eventLabelId).trim()] = entry.labelName;
     }
 
     if (entry.colorId) {
@@ -260,6 +267,7 @@ function buildCalendarLabelRegistryLookup_(registry) {
   return {
     entriesByNameKey: entriesByNameKey,
     labelNamesByColorId: labelNamesByColorId,
+    labelNamesByEventLabelId: labelNamesByEventLabelId,
     defaultLabelName: defaultLabelName,
     collisions: collisions
   };
@@ -271,10 +279,21 @@ function resolveCalendarEventLabelName_(event, labelLookup) {
     return "";
   }
 
+  // 名前付きラベルは colorId を持たないため，先に eventLabelId で照合する。
+  const eventLabelId = isBlank_(event.eventLabelId) ? "" : String(event.eventLabelId).trim();
+
+  if (eventLabelId) {
+    const nameByLabelId = (labelLookup.labelNamesByEventLabelId || {})[eventLabelId];
+
+    if (nameByLabelId) {
+      return nameByLabelId;
+    }
+  }
+
   const colorId = isBlank_(event.colorId) ? "" : String(event.colorId).trim();
 
   if (!colorId) {
-    return labelLookup.defaultLabelName || "";
+    return eventLabelId ? "" : (labelLookup.defaultLabelName || "");
   }
 
   return labelLookup.labelNamesByColorId[colorId] || "";
@@ -326,10 +345,12 @@ function syncCalendarLabelRegistryEntryFromSeed_(settings, registry, seed) {
     return false;
   }
 
-  if (isBlank_(matchedEvent.colorId)) {
+  // 名前付きラベルの予定は colorId を持たないので，どちらか片方あればよい。
+  if (isBlank_(matchedEvent.colorId) && isBlank_(matchedEvent.eventLabelId)) {
     Logger.log(
-      "syncCalendarLabelRegistry_: サンプル予定から colorId を取得できませんでした。labelName=" +
-      seed.labelName + ", sampleEventTitle=" + seed.sampleEventTitle
+      "syncCalendarLabelRegistry_: サンプル予定から色を取得できませんでした。labelName=" +
+      seed.labelName + ", sampleEventTitle=" + seed.sampleEventTitle +
+      "。予定に色かラベルが付いているか確認してください。"
     );
     return false;
   }
@@ -337,6 +358,7 @@ function syncCalendarLabelRegistryEntryFromSeed_(settings, registry, seed) {
   return upsertCalendarLabelRegistryEntry_(registry, {
     labelName: seed.labelName,
     colorId: matchedEvent.colorId,
+    eventLabelId: matchedEvent.eventLabelId,
     sampleEventTitle: seed.sampleEventTitle,
     sampleDate: seed.sampleDate,
     source: "seed"
@@ -347,7 +369,7 @@ function syncCalendarLabelRegistryEntryFromSeed_(settings, registry, seed) {
 function pickUnresolvedCalendarLabelSeeds_(registry, seeds) {
   return (seeds || []).filter(function(seed) {
     const entry = registry.entriesByNameKey[seed.labelNameKey];
-    return !entry || isBlank_(entry.colorId);
+    return !entry || (isBlank_(entry.colorId) && isBlank_(entry.eventLabelId));
   });
 }
 

@@ -29,7 +29,7 @@ function logCalendarLabelRegistry_(config) {
       const entry = lookup.entriesByNameKey[nameKey];
       Logger.log(JSON.stringify(entry));
 
-      if (isBlank_(entry.colorId)) {
+      if (isBlank_(entry.colorId) && isBlank_(entry.eventLabelId)) {
         Logger.log("未同期ラベルです。labelName=" + entry.labelName + "。sampleEventTitle を確認して sync_calendar_label_registry を再実行してください。");
       }
     });
@@ -64,7 +64,62 @@ function logCalendarLabelDiagnostics_(config, targetDate) {
       end: event.isAllDayEvent ? "終日" : formatTime_(event.endTime),
       eventLabelName: event.eventLabelName,
       colorId: event.colorId,
+      eventLabelId: event.eventLabelId,
       isAllDayEvent: event.isAllDayEvent
     }));
+  });
+}
+
+// シード探索期間の全予定を，件名と生の色つきで一覧する。
+// 「件名が見つからない」のか「色が空」なのかを切り分けるために使う。
+function logCalendarSeedCandidates_(config) {
+  const settings = requireCalendarReminderSettings_(config, "logCalendarSeedCandidates_");
+  const calendar = getTargetCalendar_(settings, "logCalendarSeedCandidates_");
+  const seeds = getCalendarLabelRegistrySeeds_();
+  const timeZone = Session.getScriptTimeZone();
+
+  Logger.log("=== シード件名の突き合わせ ===");
+  Logger.log("calendarId=" + getTargetCalendarId_(settings));
+
+  seeds.forEach(function(seed) {
+    const window = buildCalendarLabelSeedSearchWindow_(seed.sampleDate);
+    const matched = calendar.getEvents(window.startTime, window.endTime).filter(function(event) {
+      return String(event.getTitle() || "").trim() === seed.sampleEventTitle;
+    });
+
+    if (matched.length === 0) {
+      Logger.log("[" + seed.labelName + "] 件名一致なし。sampleEventTitle=" + seed.sampleEventTitle);
+      return;
+    }
+
+    const colorInfoByEventId = fetchCalendarColorInfoMap_(settings, window.startTime, window.endTime);
+
+    matched.forEach(function(event) {
+      const info = colorInfoByEventId[toCalendarApiEventId_(event.getId())] || {};
+
+      Logger.log(
+        "[" + seed.labelName + "] 一致あり。" +
+        "date=" + Utilities.formatDate(event.getStartTime(), timeZone, "yyyy/MM/dd") +
+        ", colorId=" + (isBlank_(info.colorId) ? "(空)" : info.colorId) +
+        ", eventLabelId=" + (isBlank_(info.eventLabelId) ? "(空)" : info.eventLabelId)
+      );
+    });
+  });
+
+  Logger.log("=== 探索期間内の全予定 ===");
+
+  const overall = buildCalendarLabelSeedSearchWindow_(seeds.length > 0 ? seeds[0].sampleDate : "");
+
+  const overallColorInfoByEventId = fetchCalendarColorInfoMap_(settings, overall.startTime, overall.endTime);
+
+  calendar.getEvents(overall.startTime, overall.endTime).forEach(function(event) {
+    const info = overallColorInfoByEventId[toCalendarApiEventId_(event.getId())] || {};
+
+    Logger.log(
+      "title=[" + event.getTitle() + "]" +
+      ", date=" + Utilities.formatDate(event.getStartTime(), timeZone, "yyyy/MM/dd") +
+      ", colorId=" + (isBlank_(info.colorId) ? "(空)" : info.colorId) +
+      ", eventLabelId=" + (isBlank_(info.eventLabelId) ? "(空)" : info.eventLabelId)
+    );
   });
 }

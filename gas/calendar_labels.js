@@ -18,7 +18,7 @@ function buildCalendarLabelLookup_(config) {
       return false;
     }
 
-    return !entry || isBlank_(entry.colorId);
+    return !entry || (isBlank_(entry.colorId) && isBlank_(entry.eventLabelId));
   });
 
   if (unresolvedTargetLabels.length > 0) {

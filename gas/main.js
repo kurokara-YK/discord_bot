@@ -71,3 +71,8 @@ function inspect_calendar_labels() {
   syncCalendarLabelRegistry_(settings, { force: true });
   logCalendarLabelDiagnostics_(settings, getTargetDateByOffsetDays_(0));
 }
+
+// シード件名と色の対応を実データで確認する。
+function debug_calendar_seed_candidates() {
+  logCalendarSeedCandidates_(getCalendarReminderSettings_());
+}

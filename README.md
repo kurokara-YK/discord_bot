@@ -325,6 +325,13 @@ Googleカレンダーは個人情報を含むため，このBOTを初回実行�
 
 `CalendarApp` は読み取りだけの用途でも `calendar` スコープを要求します．
 
+あわせて `appsscript.json` で **Advanced Calendar Service**（`Calendar` v3）を有効にしています．
+Googleカレンダーの**名前付きラベル**は `CalendarApp` から取得できず，
+このサービス経由でのみ `eventLabelId` を読めるためです．
+
+Apps Script 標準の機能なので，**Cloud プロジェクトの作成もAPIキーも不要**です．
+スコープも上の3つから増えません．
+
 ### config に書く値
 
 `gas/config_calendar.js` に書くのは `calendarId`，Webhook URL，通知条件です．Cloud のプロジェクト番号やプロジェクトIDを書く場所はありません．
@@ -387,7 +394,8 @@ Apps Script の実行画面やトリガー設定で選べる関数です．
 | `test_send_discord_message` | 固定のテスト文面を Discord に送る | Webhook 接続確認 |
 | `sync_calendar_label_registry` | 見本の予定から「色 ↔ ラベル名」の対応を覚え直す | 初回設定・色変更後の再同期用 |
 | `clear_calendar_label_registry` | 保存済みの対応表を空に戻す | 対応表の作り直し用 |
-| `inspect_calendar_labels` | 対応表と各予定の色番号を実行ログに出力する | ラベル診断用 |
+| `inspect_calendar_labels` | 対応表と，**当日の**各予定の色番号を実行ログに出力する | ラベル診断用 |
+| `debug_calendar_seed_candidates` | 見本の日付の**前後30日**から，件名の一致と色を突き合わせて出力する | 見本が見つからないときの原因調べ用 |
 
 通常運用でトリガーに設定するのは **`calendar_reminder_main`** です．
 
@@ -454,7 +462,7 @@ BOTを動かすだけなら clasp は不要です．
 | `.clasp.json` | GASプロジェクト紐付け設定（スクリプトIDを書き込む） |
 | `gas/appsscript.json` | GAS プロジェクトのマニフェスト |
 | `gas/calendar_api.js` | `CalendarApp` によるカレンダー取得とイベント取得 |
-| `gas/calendar_diagnostics.js` | レジストリと各予定の `colorId` を調べる診断ログ |
+| `gas/calendar_diagnostics.js` | レジストリと各予定の色・ラベルを調べる診断ログ |
 | `gas/calendar_formatters.js` | 日時整形，説明文整形，Discord本文生成 |
 | `gas/calendar_labels.js` | 通知対象ラベル名の判定とイベント絞り込み |
 | `gas/config_calendar.js` | カレンダーBOT向けの主要設定 |
