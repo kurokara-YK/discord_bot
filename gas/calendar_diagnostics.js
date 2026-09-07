@@ -6,16 +6,21 @@
 
 // レジストリ内容を Logger に出す。
 function logCalendarLabelRegistry_(config) {
-  const seeds = getCalendarLabelRegistrySeeds_();
-  const registry = getStoredCalendarLabelRegistry_(getTargetCalendarId_(config));
+  const targetCalendarKey = getTargetCalendarProfileKey_(config);
+  const targetCalendarId = getTargetCalendarId_(config);
+  const profile = getCalendarLabelProfile_(targetCalendarKey);
+  const seeds = getCalendarLabelRegistrySeeds_(targetCalendarKey);
+  const registry = getStoredCalendarLabelRegistry_(targetCalendarId);
   const lookup = buildCalendarLabelRegistryLookup_(registry);
 
   Logger.log("=== 保存済みラベルレジストリ ===");
-  Logger.log("calendarId=" + getTargetCalendarId_(config));
+  Logger.log("calendarName=" + targetCalendarKey);
+  Logger.log("calendarId=" + targetCalendarId);
+  Logger.log("profileSource=" + profile.source);
   Logger.log("seedCount=" + seeds.length);
 
   if (seeds.length === 0) {
-    Logger.log("シード設定はありません。config_labels.js の CALENDAR_LABEL_REGISTRY_SEEDS を確認してください。");
+    Logger.log("シード設定はありません。config_labels.js の CALENDAR_LABEL_PROFILES を確認してください。");
   } else {
     seeds.forEach(function(seed) {
       Logger.log(JSON.stringify(seed));
@@ -75,11 +80,16 @@ function logCalendarLabelDiagnostics_(config, targetDate) {
 function logCalendarSeedCandidates_(config) {
   const settings = requireCalendarReminderSettings_(config, "logCalendarSeedCandidates_");
   const calendar = getTargetCalendar_(settings, "logCalendarSeedCandidates_");
-  const seeds = getCalendarLabelRegistrySeeds_();
+  const targetCalendarKey = getTargetCalendarProfileKey_(settings);
+  const targetCalendarId = getTargetCalendarId_(settings);
+  const profile = getCalendarLabelProfile_(targetCalendarKey);
+  const seeds = getCalendarLabelRegistrySeeds_(targetCalendarKey);
   const timeZone = Session.getScriptTimeZone();
 
   Logger.log("=== シード件名の突き合わせ ===");
-  Logger.log("calendarId=" + getTargetCalendarId_(settings));
+  Logger.log("calendarName=" + targetCalendarKey);
+  Logger.log("calendarId=" + targetCalendarId);
+  Logger.log("profileSource=" + profile.source);
 
   seeds.forEach(function(seed) {
     const window = buildCalendarLabelSeedSearchWindow_(seed.sampleDate);

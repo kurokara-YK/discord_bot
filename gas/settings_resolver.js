@@ -30,8 +30,12 @@ function requireCalendarReminderSettings_(settings, callerName) {
 
   normalized.label = normalized.label || "Googleカレンダー連携 Discord リマインダーBOT";
   normalized.calendarId = isBlank_(normalized.calendarId) ? "primary" : String(normalized.calendarId).trim();
+  // ラベルプロファイルは CALENDAR_BOOK の呼び名で引く。
   normalized.webhookUrl = isBlank_(normalized.webhookUrl) ? "" : String(normalized.webhookUrl).trim();
-  normalized.targetEventLabels = normalizeLabelFilterList_(normalized.targetEventLabels);
+  // true を指定したら，そのカレンダーのプロファイルに書いたラベル一覧を使う。
+  normalized.targetEventLabels = normalized.targetEventLabels === true
+    ? normalizeLabelFilterList_(getConfiguredCalendarLabelNames_(normalized.calendarId))
+    : normalizeLabelFilterList_(normalized.targetEventLabels);
   normalized.enableTomorrowReminder = normalized.enableTomorrowReminder !== false;
   normalized.enableTodayReminder = normalized.enableTodayReminder !== false;
   normalized.notifyIfEmpty = normalized.notifyIfEmpty === true;

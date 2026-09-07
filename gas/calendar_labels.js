@@ -25,7 +25,7 @@ function buildCalendarLabelLookup_(config) {
     throw new Error(
       "buildCalendarLabelLookup_: 次のラベルが内部レジストリへ未登録です。missing=" +
       unresolvedTargetLabels.join(", ") +
-      "。sync_calendar_label_registry を実行し，config_labels.js の CALENDAR_LABEL_REGISTRY_SEEDS を確認してください。"
+      "。sync_calendar_label_registry を実行し，config_labels.js の CALENDAR_LABEL_PROFILES を確認してください。"
     );
   }
 

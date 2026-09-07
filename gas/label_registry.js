@@ -26,21 +26,100 @@ function createEmptyCalendarLabelRegistry_() {
   };
 }
 
-// config_labels.js のシード設定を読みやすい形へ整える。
-function getCalendarLabelRegistrySeeds_() {
-  if (typeof CALENDAR_LABEL_REGISTRY_SEEDS === "undefined" || !Array.isArray(CALENDAR_LABEL_REGISTRY_SEEDS)) {
-    return [];
+// CALENDAR_BOOK を逆引きして，カレンダーIDから呼び名を探す。
+function findCalendarBookNameById_(calendarId) {
+  if (typeof CALENDAR_BOOK === "undefined" || !CALENDAR_BOOK) {
+    return "";
   }
 
-  return CALENDAR_LABEL_REGISTRY_SEEDS
+  const wanted = String(calendarId || "").trim();
+  const names = Object.keys(CALENDAR_BOOK).filter(function(name) {
+    return String(CALENDAR_BOOK[name] || "").trim() === wanted;
+  });
+
+  return names.length > 0 ? names[0] : "";
+}
+
+// config_labels.js から対象カレンダー用のプロファイルを取り出す。
+// 引数には CALENDAR_BOOK の呼び名を渡す。カレンダーIDでも引ける。
+// 見つからないときは旧形式の設定を探し，それも無ければ既定値へ落とす。
+function getCalendarLabelProfile_(calendarKey) {
+  const wantedCalendarId = isBlank_(calendarKey) ? "primary" : String(calendarKey).trim();
+
+  if (typeof CALENDAR_LABEL_PROFILES !== "undefined" && CALENDAR_LABEL_PROFILES) {
+    // 呼び名で引く。見つからなければ，IDから呼び名を逆引きして再試行する。
+    const profileKey = CALENDAR_LABEL_PROFILES[wantedCalendarId]
+      ? wantedCalendarId
+      : findCalendarBookNameById_(wantedCalendarId);
+    const profile = CALENDAR_LABEL_PROFILES[profileKey];
+
+    if (profile) {
+      return {
+        calendarId: wantedCalendarId,
+        labels: Array.isArray(profile.labels) ? profile.labels : [],
+        seeds: Array.isArray(profile.seeds) ? profile.seeds : [],
+        source: "profile"
+      };
+    }
+  }
+
+  // 旧形式（CALENDAR_REMINDER_LABELS / CALENDAR_LABEL_REGISTRY_SEEDS）との互換。
+  const hasLegacyLabels = typeof CALENDAR_REMINDER_LABELS !== "undefined" && Array.isArray(CALENDAR_REMINDER_LABELS);
+  const hasLegacySeeds = typeof CALENDAR_LABEL_REGISTRY_SEEDS !== "undefined" && Array.isArray(CALENDAR_LABEL_REGISTRY_SEEDS);
+
+  if (hasLegacyLabels || hasLegacySeeds) {
+    Logger.log(
+      "getCalendarLabelProfile_: \"" + wantedCalendarId +
+      "\" のプロファイルが無いため，旧形式の設定を使います。" +
+      "config_labels.js の CALENDAR_LABEL_PROFILES へ移行してください。"
+    );
+
+    return {
+      calendarId: wantedCalendarId,
+      labels: hasLegacyLabels ? CALENDAR_REMINDER_LABELS : [],
+      seeds: hasLegacySeeds ? CALENDAR_LABEL_REGISTRY_SEEDS : [],
+      source: "legacy"
+    };
+  }
+
+  const fallback = (typeof CALENDAR_LABEL_PROFILE_FALLBACK !== "undefined" && CALENDAR_LABEL_PROFILE_FALLBACK)
+    ? CALENDAR_LABEL_PROFILE_FALLBACK
+    : { labels: [], seeds: [] };
+
+  Logger.log(
+    "getCalendarLabelProfile_: \"" + wantedCalendarId +
+    "\" のプロファイルが config_labels.js の CALENDAR_LABEL_PROFILES にありません。" +
+    "既定値（色なしを「デフォルト」として扱う）で動作します。"
+  );
+
+  return {
+    calendarId: wantedCalendarId,
+    labels: Array.isArray(fallback.labels) ? fallback.labels : [],
+    seeds: Array.isArray(fallback.seeds) ? fallback.seeds : [],
+    source: "fallback"
+  };
+}
+
+// 対象カレンダーのシード設定を読みやすい形へ整える。
+function getCalendarLabelRegistrySeeds_(calendarKey) {
+  const profile = getCalendarLabelProfile_(calendarKey);
+
+  return profile.seeds
     .map(function(seed) {
       if (!seed) {
         return null;
       }
 
-      const labelName = String(seed.labelName || "").trim();
-      const sampleEventTitle = String(seed.sampleEventTitle || "").trim();
-      const sampleDate = isBlank_(seed.sampleDate) ? "" : String(seed.sampleDate).trim();
+      // 文字列だけを書いた場合は，ラベル名として扱う。
+      const normalizedSeed = (typeof seed === "string") ? { labelName: seed } : seed;
+      const labelName = String(normalizedSeed.labelName || "").trim();
+
+      // 見本の件名はラベル名と同じことがほとんどなので，
+      // 省略されたらラベル名をそのまま使う。
+      const sampleEventTitle = isBlank_(normalizedSeed.sampleEventTitle)
+        ? labelName
+        : String(normalizedSeed.sampleEventTitle).trim();
+      const sampleDate = isBlank_(normalizedSeed.sampleDate) ? "" : String(normalizedSeed.sampleDate).trim();
 
       if (!labelName || !sampleEventTitle) {
         return null;
@@ -59,12 +138,44 @@ function getCalendarLabelRegistrySeeds_() {
 }
 
 
-// config_labels.js 上で定義されたラベル名一覧を重複なしで返す。
-function getConfiguredCalendarLabelNames_() {
-  const labelNames = [];
+// 通知対象にするラベル名の一覧を重複なしで返す。
+// labels を書いていればそれを使い，省略時は seeds のラベル（＋デフォルト）を使う。
+// targetEventLabels: true のときの絞り込みに使われる。
+function getConfiguredCalendarLabelNames_(calendarKey) {
+  const profile = getCalendarLabelProfile_(calendarKey);
+
+  // labels を明示したら，それだけを通知対象にする。
+  if (Array.isArray(profile.labels) && profile.labels.length > 0) {
+    return dedupeCalendarLabelNames_(profile.labels);
+  }
+
+  // 省略時は seeds のラベル名がそのまま対象。
+  // 色なしの予定を拾えるよう「デフォルト」も自動で足す。
+  return dedupeCalendarLabelNames_(
+    getCalendarLabelRegistrySeeds_(calendarKey).map(function(seed) {
+      return seed.labelName;
+    }).concat(["デフォルト"])
+  );
+}
+
+// レジストリへ登録しておくラベル名の一覧を返す。
+// 通知対象でなくても，色を覚えておけば通知本文へ名前を出せる。
+function getRegisteredCalendarLabelNames_(calendarKey) {
+  return dedupeCalendarLabelNames_(
+    getConfiguredCalendarLabelNames_(calendarKey).concat(
+      getCalendarLabelRegistrySeeds_(calendarKey).map(function(seed) {
+        return seed.labelName;
+      })
+    )
+  );
+}
+
+// ラベル名一覧から空要素と重複を取り除く。
+function dedupeCalendarLabelNames_(labelNames) {
+  const result = [];
   const seen = {};
 
-  normalizeStringList_(typeof CALENDAR_REMINDER_LABELS === "undefined" ? [] : CALENDAR_REMINDER_LABELS).forEach(function(labelName) {
+  normalizeStringList_(labelNames).forEach(function(labelName) {
     const key = normalizeCalendarLabelNameKey_(labelName);
 
     if (!key || seen[key]) {
@@ -72,19 +183,10 @@ function getConfiguredCalendarLabelNames_() {
     }
 
     seen[key] = true;
-    labelNames.push(labelName);
+    result.push(labelName);
   });
 
-  getCalendarLabelRegistrySeeds_().forEach(function(seed) {
-    if (!seed || !seed.labelNameKey || seen[seed.labelNameKey]) {
-      return;
-    }
-
-    seen[seed.labelNameKey] = true;
-    labelNames.push(seed.labelName);
-  });
-
-  return labelNames;
+  return result;
 }
 
 // Script Properties から保存済みレジストリを読む。
@@ -122,11 +224,16 @@ function getStoredCalendarLabelRegistry_(expectedCalendarId) {
   if (wantedCalendarId && registry.calendarId !== wantedCalendarId) {
     Logger.log(
       "getStoredCalendarLabelRegistry_: 対象カレンダーが変わったためレジストリを破棄します。" +
-      "storedCalendarId=" + (registry.calendarId || "(未記録)")
+      "storedCalendarId=" + (registry.calendarId || "(未記録)") +
+      ", targetCalendarId=" + wantedCalendarId
     );
 
     const reset = createEmptyCalendarLabelRegistry_();
     reset.calendarId = wantedCalendarId;
+
+    // 破棄したことを呼び出し側へ伝える。
+    // これが無いと「保存が必要」と判断できず，古い色が残ったままになる。
+    reset.discardedCalendarId = registry.calendarId || "";
     return reset;
   }
 
@@ -137,9 +244,16 @@ function getStoredCalendarLabelRegistry_(expectedCalendarId) {
 function saveCalendarLabelRegistry_(registry) {
   registry.updatedAt = new Date().toISOString();
   registry.calendarId = isBlank_(registry.calendarId) ? "" : String(registry.calendarId).trim();
+
+  // discardedCalendarId は実行中だけの目印なので保存対象から外す。
   PropertiesService.getScriptProperties().setProperty(
     CALENDAR_LABEL_REGISTRY_PROPERTY_KEY,
-    JSON.stringify(registry)
+    JSON.stringify({
+      version: registry.version,
+      updatedAt: registry.updatedAt,
+      calendarId: registry.calendarId,
+      entriesByNameKey: registry.entriesByNameKey
+    })
   );
 }
 
@@ -379,13 +493,20 @@ function syncCalendarLabelRegistry_(settings, options) {
   settings = requireCalendarReminderSettings_(settings || getCalendarReminderSettings_(), "syncCalendarLabelRegistry_");
   options = options || {};
 
+  // プロファイルは呼び名で引き，レジストリは実際のカレンダーIDで保存する。
+  const targetCalendarKey = getTargetCalendarProfileKey_(settings);
   const targetCalendarId = getTargetCalendarId_(settings);
   const registry = getStoredCalendarLabelRegistry_(targetCalendarId);
-  const seeds = getCalendarLabelRegistrySeeds_();
-  const configuredLabelNames = getConfiguredCalendarLabelNames_();
-  let changed = registry.calendarId !== targetCalendarId;
+  const seeds = getCalendarLabelRegistrySeeds_(targetCalendarKey);
+  const configuredLabelNames = getRegisteredCalendarLabelNames_(targetCalendarKey);
+
+  // getStoredCalendarLabelRegistry_ は破棄後の registry へ既に targetCalendarId を
+  // 入れて返す。そのため calendarId の比較では変更を検知できない。
+  // 破棄が起きたかどうかと，未記録かどうかで判断する。
+  let changed = !isBlank_(registry.discardedCalendarId) || isBlank_(registry.calendarId);
 
   registry.calendarId = targetCalendarId;
+  delete registry.discardedCalendarId;
 
   changed = pruneCalendarLabelRegistryEntries_(registry, configuredLabelNames) || changed;
   changed = ensureConfiguredCalendarLabelEntries_(registry, configuredLabelNames) || changed;

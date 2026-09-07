@@ -155,30 +155,63 @@ Googleカレンダーの予定に付けた色で，通知する予定を絞り�
 届くのは色を表す値だけです．そのため初回だけ「そのラベルを付けた既存予定」を1件指定して，
 BOTに「この予定と同じ色を，この名前で呼ぶ」と教えます．
 
-設定するのは `gas/config_labels.js` の2か所です．
+**色番号の意味はカレンダーごとに違う**ため，設定はカレンダー単位で書きます．
+
+まず `gas/config_calendar.js` の `CALENDAR_BOOK` にカレンダーを登録します．
+**長いカレンダーIDを書くのはここだけ**です．
 
 ```js
-// 1. 通知したいラベル名
-const CALENDAR_REMINDER_LABELS = [
-  "会社タスク",
-  "アルバイト"
-];
-
-// 2. 各ラベルの色を覚えさせるための見本の予定
-const CALENDAR_LABEL_REGISTRY_SEEDS = [
-  {
-    labelName: "会社タスク",
-    sampleEventTitle: "定例ミーティング",
-    sampleDate: "2026/07/05"
-  }
-];
+const CALENDAR_BOOK = {
+  "メインカレンダー": "primary",
+  "サブカレンダー1": "xxxx@group.calendar.google.com"
+};
 ```
+
+次に `gas/config_labels.js` へ，**同じ呼び名で**ラベル設定を書きます．
+
+```js
+const CALENDAR_LABEL_PROFILES = {
+
+  "メインカレンダー": {
+    seeds: [
+      { labelName: "会社タスク",   sampleDate: "2026/07/05" },
+      { labelName: "アルバイト",   sampleDate: "2026/07/05" }
+    ]
+  },
+
+  "サブカレンダー1": {
+    seeds: [
+      { labelName: "重要", sampleDate: "2026/08/31" }
+    ]
+  }
+};
+```
+
+見本の予定の件名がラベル名と同じなら `sampleEventTitle` は**省略できます**．
+違う件名の予定を見本にしたいときだけ書きます．
+
+```js
+{ labelName: "会社タスク", sampleDate: "2026/07/05",
+  sampleEventTitle: "定例ミーティング" },
+```
+
+`デフォルト`（色なしの予定）は自動で通知対象に加わるため，書く必要はありません．
+
+カレンダーを切り替えるときは，`calendarId` に呼び名を書くだけです．
+
+```js
+calendarId: "サブカレンダー1",
+```
+
+サブカレンダーを増やしたいときは，`CALENDAR_BOOK` に1行足して，
+`CALENDAR_LABEL_PROFILES` に同じ呼び名のブロックを足します．
 
 `gas/config_calendar.js` で `targetEventLabels` を切り替えると有効になります．
 
 ```js
-targetEventLabels: CALENDAR_REMINDER_LABELS,   // 絞り込む
-targetEventLabels: false,                      // すべての予定を通知
+targetEventLabels: true,                 // プロファイルの labels で絞り込む
+targetEventLabels: ["会社タスク"],       // 特定のラベルだけに絞る
+targetEventLabels: false,                // すべての予定を通知
 ```
 
 書いたあと `sync_calendar_label_registry` を1回実行すると，色を覚えます．
@@ -187,6 +220,24 @@ targetEventLabels: false,                      // すべての予定を通知
 - 色はパレットのものでも，カラーピッカーで作ったものでも使えます
 - ただし別々のラベルに同じ色を使うと区別できません
 - `デフォルト` という名前は特別で，色なしの予定に自動で割り当てられます
+- `seeds` に書いたラベルがそのまま通知対象になります
+- 通知対象をさらに絞りたいときだけ `labels: ["重要", "デフォルト"]` を足します
+
+### カレンダーを切り替えたとき
+
+`calendarId` の呼び名を書き換えて実行すると，**対応表は自動で作り直されます．**
+色番号の意味はカレンダーごとに違うため，前のカレンダーの対応表は破棄されます．
+`clear_calendar_label_registry` を手で実行する必要はありません．
+
+対応表は**常に1カレンダー分だけ**保存されます．
+複数カレンダーの対応表を同時に持つことはできませんが，
+`CALENDAR_LABEL_PROFILES` に書いておけば切り替えのたびに自動で覚え直します．
+
+プロファイルを書いていないカレンダーを指定した場合は，
+色なしの予定を `デフォルト` として扱う既定動作になり，実行ログに警告が出ます．
+
+`CALENDAR_BOOK` に無い呼び名を書いた場合は，書き間違いとして実行時にエラーになります．
+エラー文には登録済みの呼び名が一覧で出ます．
 
 **しくみの詳細・設定の書き方・うまく動かないときの調べ方は
 [docs/label_setup.md](docs/label_setup.md) にあります．**
@@ -362,7 +413,8 @@ Google Calendar API has not been used in project ... before or it is disabled.
 | --- | --- | --- |
 | `webhookUrl` | プレースホルダ | Discord の Webhook URL．**必ず自分の値に書き換える** |
 | `calendarId` | `"primary"` | 読み取るカレンダー．`"primary"` は実行アカウントのメインカレンダー |
-| `targetEventLabels` | `false` | 通知対象のラベル名．`false` ならすべての予定を通知 |
+| `targetEventLabels` | `false` | 通知対象のラベル．`false`＝全予定／`true`＝プロファイルの `labels`／配列＝指定したラベルのみ |
+| `CALENDAR_BOOK` | — | 使うカレンダーの「呼び名 → カレンダーID」対応．IDを書くのはここだけ |
 | `enableTomorrowReminder` | `true` | 明日の予定を通知するか |
 | `enableTodayReminder` | `true` | 今日の予定を通知するか |
 | `notifyIfEmpty` | `false` | 予定が0件の日も「予定はありません」と通知するか |
@@ -375,7 +427,7 @@ Google Calendar API has not been used in project ... before or it is disabled.
 
 | 項目 | 意味 |
 | --- | --- |
-| `CALENDAR_REMINDER_LABELS` | 通知したいラベル名の一覧 |
+| `CALENDAR_LABEL_PROFILES` | 通知したいラベル名の一覧 |
 | `CALENDAR_LABEL_REGISTRY_SEEDS` | 各ラベル名に対応する「見本の予定」の指定 |
 
 詳しくは [docs/label_setup.md](docs/label_setup.md) を参照してください．
@@ -398,6 +450,28 @@ Apps Script の実行画面やトリガー設定で選べる関数です．
 | `debug_calendar_seed_candidates` | 見本の日付の**前後30日**から，件名の一致と色を突き合わせて出力する | 見本が見つからないときの原因調べ用 |
 
 通常運用でトリガーに設定するのは **`calendar_reminder_main`** です．
+
+### 診断関数が出力する内容
+
+`inspect_calendar_labels` と `debug_calendar_seed_candidates` は，
+実行ログ（Apps Script の「実行数」画面）へ次を出力します．
+
+| 出力項目 | 意味 |
+| --- | --- |
+| `calendarName` | `calendarId` に書いた呼び名 |
+| `calendarId` | 呼び名から解決された実際のカレンダーID |
+| `profileSource` | 使われた設定の出どころ．`profile`（正常）／`legacy`（旧形式）／`fallback`（プロファイル未定義） |
+| `seedCount` | そのカレンダー用に定義した見本の件数 |
+| `colorId` | 予定に付いている色番号 |
+| `eventLabelId` | 名前付きラベルの識別子（色番号を持たない予定用） |
+
+`profileSource` が `fallback` になっている場合は，
+`config_labels.js` の `CALENDAR_LABEL_PROFILES` にそのカレンダーの項目がありません．
+
+> **内部関数について**
+> 上記の関数から呼ばれる `logCalendarLabelRegistry_`，`logCalendarLabelDiagnostics_`，
+> `logCalendarSeedCandidates_` は末尾が `_` の内部関数です．
+> Apps Script の実行メニューには表示されないため，直接は実行できません．
 
 > **注意**
 > どの関数も，実行すると**実際にDiscordへ送信されます．**
@@ -427,6 +501,7 @@ BOTを動かすだけなら clasp は不要です．
 .
 ├── .clasp.json
 ├── .gitignore
+├── AGENTS.md
 ├── README.md
 ├── docs
 │   ├── development_environment.md
@@ -456,6 +531,7 @@ BOTを動かすだけなら clasp は不要です．
 | パス | 役割 |
 | --- | --- |
 | `README.md` | プロジェクト全体の入口となるメイン説明書 |
+| `AGENTS.md` | 複数カレンダー対応の設計メモと，開発時の作業規約 |
 | `docs/getting_started.md` | セットアップ手順．初めて使う人向け |
 | `docs/label_setup.md` | ラベル（色）のしくみと調べ方 |
 | `docs/development_environment.md` | clasp を使う開発環境の構築手順 |
@@ -466,7 +542,7 @@ BOTを動かすだけなら clasp は不要です．
 | `gas/calendar_formatters.js` | 日時整形，説明文整形，Discord本文生成 |
 | `gas/calendar_labels.js` | 通知対象ラベル名の判定とイベント絞り込み |
 | `gas/config_calendar.js` | カレンダーBOT向けの主要設定 |
-| `gas/config_labels.js` | 通知対象ラベル一覧とラベル同期用サンプル予定の設定 |
+| `gas/config_labels.js` | カレンダーごとの通知対象ラベルと，ラベル同期用サンプル予定の設定 |
 | `gas/label_registry.js` | Script Properties に保存するラベルレジストリの管理 |
 | `gas/main.js` | Apps Script から実行する入口関数 |
 | `gas/reminder_builders.js` | 前日通知・当日通知の payload 組み立て |

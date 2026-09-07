@@ -4,9 +4,47 @@
  * CalendarApp によるカレンダー取得とイベント取得
  ****************************************************/
 
-// 設定から対象 calendarId を統一して返す。
-function getTargetCalendarId_(config) {
+// 設定に書かれた値をそのまま呼び名として返す。
+// CALENDAR_BOOK の呼び名か，カレンダーIDそのものが入る。
+// ラベルプロファイルの参照にはこちらを使う。
+function getTargetCalendarProfileKey_(config) {
   return isBlank_(config.calendarId) ? "primary" : String(config.calendarId).trim();
+}
+
+// カレンダーIDらしい文字列かどうかを判定する。
+// "primary" か，メールアドレス形式（@ を含む）ならIDとみなす。
+function looksLikeCalendarId_(value) {
+  const text = String(value || "").trim();
+  return text === "primary" || text.indexOf("@") !== -1;
+}
+
+// 設定から対象 calendarId を統一して返す。
+// CALENDAR_BOOK に登録した呼び名は，実際のカレンダーIDへ置き換える。
+function getTargetCalendarId_(config) {
+  const profileKey = getTargetCalendarProfileKey_(config);
+
+  if (typeof CALENDAR_BOOK !== "undefined" && CALENDAR_BOOK) {
+    const mappedCalendarId = CALENDAR_BOOK[profileKey];
+
+    if (!isBlank_(mappedCalendarId)) {
+      return String(mappedCalendarId).trim();
+    }
+  }
+
+  // 呼び名でもIDでもない値は，書き間違いとして早めに知らせる。
+  if (!looksLikeCalendarId_(profileKey)) {
+    const knownNames = (typeof CALENDAR_BOOK !== "undefined" && CALENDAR_BOOK)
+      ? Object.keys(CALENDAR_BOOK).join(", ")
+      : "(CALENDAR_BOOK が未定義)";
+
+    throw new Error(
+      "getTargetCalendarId_: calendarId=\"" + profileKey + "\" は " +
+      "config_calendar.js の CALENDAR_BOOK に登録されていません。" +
+      "登録済みの呼び名: " + knownNames
+    );
+  }
+
+  return profileKey;
 }
 
 // 対象カレンダーを CalendarApp から取得する。
