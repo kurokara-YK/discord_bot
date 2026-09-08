@@ -1,8 +1,8 @@
 <a name="readme-top"></a>
 
-# Googleカレンダー Discord リマインダーBOT
+# Hugging Face 更新通知 Discord BOT
 
-Googleカレンダーの予定を，毎朝Discordへ自動で送るBOTです．
+Hugging Faceのリポジトリが更新されたとき，Discordへ自動で通知するBOTです．
 
 Googleアカウントがあれば無料で使えます．
 
@@ -10,20 +10,19 @@ Googleアカウントがあれば無料で使えます．
   <summary>目次</summary>
   <ol>
     <li><a href="#どんなものか">どんなものか</a></li>
+    <li><a href="#はじめての方へ">はじめての方へ</a></li>
+    <li><a href="#必要なもの">必要なもの</a></li>
     <li><a href="#届くメッセージ">届くメッセージ</a></li>
-    <li><a href="#ドキュメント一覧">ドキュメント一覧</a></li>
     <li><a href="#使いはじめる">使いはじめる</a></li>
     <li><a href="#しくみ">しくみ</a></li>
-    <li><a href="#通知対象">通知対象</a></li>
-    <li><a href="#ラベルによる通知対象の制御">ラベルによる通知対象の制御</a></li>
-    <li><a href="#通知タイミング">通知タイミング</a></li>
-    <li><a href="#実行アカウントとカレンダー権限">実行アカウントとカレンダー権限</a></li>
-    <li><a href="#calendarapp-とセットアップ">CalendarApp とセットアップ</a></li>
+    <li><a href="#合言葉webhooktoken">合言葉（webhookToken）</a></li>
+    <li><a href="#hugging-face-の-webhook-設定">Hugging Face の Webhook 設定</a></li>
+    <li><a href="#hugging-face-アクセストークン">Hugging Face アクセストークン</a></li>
     <li><a href="#設定項目一覧">設定項目一覧</a></li>
     <li><a href="#実行できる関数">実行できる関数</a></li>
     <li><a href="#ファイル構成">ファイル構成</a></li>
-    <li><a href="#clasp設定">clasp設定</a></li>
     <li><a href="#git管理上の注意">Git管理上の注意</a></li>
+    <li><a href="#うまくいかないとき">うまくいかないとき</a></li>
     <li><a href="#関連資料">関連資料</a></li>
     <li><a href="#作成者">作成者</a></li>
     <li><a href="#ライセンス">ライセンス</a></li>
@@ -32,546 +31,673 @@ Googleアカウントがあれば無料で使えます．
 
 ## どんなものか
 
-Googleカレンダーに入っている予定を，毎朝Discordへ自動で送るBOTです．
+Hugging Faceのリポジトリが更新されたとき，その内容をDiscordへ自動で知らせるBOTです．
 
-Googleアカウントがあれば**無料**で使えます．パソコンを起動しておく必要もありません．
+Googleアカウントがあれば**無料**で使えます．パソコンの電源が切れていても動きます．
 
-- 今日の予定と明日の予定を，1通のメッセージにまとめて送る
-- 予定の色（ラベル）で，通知する種類を絞り込める
-- 説明欄も指定した文字数まで一緒に表示する
-- 通知する時刻・内容はすべて設定で変えられる
-
-Googleカレンダーには研究・打ち合わせ・私用・アルバイトなど複数の予定が混ざりがちです．
-その中から**必要な予定だけをDiscordへ再通知**して，見落としを防ぐことを目的にしています．
+- 誰が，どのファイルを，どんな内容で更新したかが分かる
+- 個人のリポジトリと，組織のリポジトリを両方まとめて見張れる
+- 公開・非公開のどちらにも対応している
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
 ## 届くメッセージ
 
-毎朝，その日と翌日の予定がまとめて1通で届きます．
+pushがあると，次のような通知が届きます．
 
 ```text
-## 📅 本日の予定
-### 2026年7月3日（金）
-
-**14:30〜16:00**
-> [会社タスク] 企画書のレビュー
-> └ 先方へ提出する企画書の内容を確認し、修正点を洗い出す...続きはカレンダー
-
-**20:00〜21:15**
-> [アルバイト] アルバイト
-
-[🔗 Googleカレンダーで確認](リンク)
-
----
-
-## 📅 明日の予定
-### 2026年7月4日（土）
-
-**10:00〜12:00**
-> [会社タスク] 定例会
-
-[🔗 Googleカレンダーで確認](リンク)
+🤗 Hugging Face
+[kurokara-YK/3d-printing-models:main] 1 new commit
+> 2ae1f72  ファイルを追加しました — kurokara-YK
+> 2026/09/08 09:35
+🔗 コミットを見る
 ```
 
-`[ ]` の中は，予定の色に付けた名前です．説明欄は指定した文字数で切り詰めて表示します．
-末尾のリンクを開いたときの表示形式（日・週・月・年）は `calendarLinkView` で変えられます．
+左から順に，コミットの番号，コミットメッセージ，更新した人の名前です．
+「コミットを見る」を押すと，Hugging Faceの画面で変更内容を確認できます．
+
+ブランチやタグを作ったとき，消したときも通知されます．
+
+```text
+[kurokara-YK/3d-printing-models:feature] 新しいブランチ
+[kurokara-YK/3d-printing-models:tag v1.0] 新しいタグ
+[kurokara-YK/3d-printing-models:old] ブランチが削除されました
+```
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
-## ドキュメント一覧
+## はじめての方へ
 
-目的に応じて，次のドキュメントを読んでください．
+プログラムを書いたことがなくても使えます．
+ここでは，出てくる言葉をひととおり説明します．
 
-| ドキュメント | 読むタイミング | 内容 |
+### Hugging Face とは
+
+AIのモデルやデータを置いておける，**インターネット上の保管場所**です．
+GitHubに似ていますが，AI向けに作られており，大きなファイルを扱えます．
+
+このBOTでは，3Dモデルなどのファイルを置いた場所として使います．
+
+### リポジトリとは
+
+ファイルをまとめて入れておく**フォルダのようなもの**です．
+「誰が」「いつ」「何を変えたか」の記録が残るのが，普通のフォルダとの違いです．
+
+### push（プッシュ）とは
+
+自分のパソコンにあるファイルを，**インターネット上の保管場所へ送る**ことです．
+このBOTは，このpushを見張って通知します．
+
+### コミットとは
+
+「ここまでの変更をひとまとまりとして記録する」という操作です．
+1回のコミットには，変更内容と，それを説明する短い文章（コミットメッセージ）が付きます．
+
+通知に出る `Add b.txt` のような文字が，このコミットメッセージです．
+
+### Webhook（ウェブフック）とは
+
+**何かが起きたとき，別のサービスへ自動で知らせるしくみ**です．
+
+このBOTでは，Hugging Faceで更新が起きたときに，
+その知らせがGoogleのサーバーへ届き，そこからDiscordへ転送されます．
+
+```text
+Hugging Face で更新
+    ↓ Webhook（更新の知らせ）
+Google Apps Script（このBOT）
+    ↓
+Discord に通知が届く
+```
+
+### Google Apps Script（GAS）とは
+
+Googleが無料で提供している，**Googleのサーバー上でプログラムを動かすしくみ**です．
+
+自分のパソコンを起動しておく必要がありません．
+このBOTの本体は，ここで動きます．
+
+### トークンとは
+
+**パスワードの代わりになる文字列**です．
+このBOTでは3種類のトークンが出てきますが，役割はそれぞれ違います．
+
+| 名前 | 何のためのものか | どこで作るか |
 | --- | --- | --- |
-| **[docs/getting_started.md](docs/getting_started.md)** | **まずここから** | セットアップ手順．WebhookのURL取得から自動送信の設定まで，画面操作の順に説明しています．**プログラミングの知識は不要です** |
-| [docs/label_setup.md](docs/label_setup.md) | 予定を絞り込みたいとき | 色でラベルを見分けるしくみの詳しい説明．うまく動かないときの調べ方 |
-| [docs/development_environment.md](docs/development_environment.md) | コードを編集したいとき | claspを使い，パソコン上のエディタでコードを編集するための環境構築手順．BOTを動かすだけなら不要です |
+| Discord Webhook URL | Discordへ書き込むための住所 | Discordのチャンネル設定 |
+| 合言葉（webhookToken） | このBOTへの不正な書き込みを防ぐ | このBOTが自動で作る |
+| Hugging Face アクセストークン | 非公開リポジトリを読むため | Hugging Faceの設定画面 |
 
-このREADMEは，**機能と設定項目のリファレンス**です．
-セットアップの実際の操作手順は [docs/getting_started.md](docs/getting_started.md) にあります．
+**どれも他人に見せないでください．**
+名前が似ていて混乱しやすいので，出てきたときに都度説明します．
+
+<p align="right">(<a href="#readme-top">上に戻る</a>)</p>
+
+## 必要なもの
+
+作りはじめる前に，次の3つを用意してください．
+
+| 必要なもの | 用意する方法 | 費用 |
+| --- | --- | --- |
+| Googleアカウント | すでにGmailを使っていればそれでよい | 無料 |
+| Discordのアカウントとサーバー | 通知を受け取るチャンネルが必要 | 無料 |
+| Hugging Faceのアカウント | <https://huggingface.co/join> で登録 | 無料 |
+
+Discordの**サーバー**は，自分専用のものでも構いません．
+チャンネルの設定を変えられる権限（管理者）が必要です．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
 ## 使いはじめる
 
-はじめて使う場合は [docs/getting_started.md](docs/getting_started.md) を開いてください．
-所要時間は30分〜1時間です．
-
 大まかな流れは次のとおりです．
 
+1. DiscordでWebhook URLを取得する
+2. Apps Scriptにコードを反映する
+3. `step1_make_token` を実行して合言葉を発行する
+4. 出力された合言葉を `gas/config_huggingface.js` に貼り付ける
+5. ウェブアプリとしてデプロイし，表示されたURLをコピーする
+6. コピーしたURLを `gas/config_huggingface.js` の `webAppUrl` に貼り付ける
+7. `step2_show_webhook_url` を実行し，登録用のURLを受け取る
+8. そのURLをHugging Faceの [Webhooks設定](https://huggingface.co/settings/webhooks) に登録する
+9. 実際にpushして通知を確認する
+
+privateリポジトリで作者名やコミットメッセージも表示したい場合は，
+通知が届くことを確認したあとで
+[Hugging Face アクセストークン](#hugging-face-アクセストークン)を設定してください．
+最初から設定する必要はありません．
+
+手順が2つに分かれているのは，**ウェブアプリのURLがデプロイ後でないと決まらない**ためです．
+
+### 1. Discord Webhook URLを取得する
+
+通知を受け取りたいチャンネルで，次の順に進みます．
+
 ```text
-1. Discord で Webhook URL を取得する
-2. （必要なら）カレンダーの予定に色を付ける
-3. Apps Script にコードを貼り付ける
-4. config_calendar.js に Webhook URL を書く
-5. test_send_discord_message でテスト送信する
-6. （必要なら）sync_calendar_label_registry でラベルを覚えさせる
-7. calendar_reminder_main で手動送信を確認する
-8. トリガーを設定して自動化する
+チャンネル名の横の歯車（チャンネルの編集）
+  → 連携サービス
+  → ウェブフック
+  → 新しいウェブフック
+  → ウェブフックURLをコピー
 ```
+
+コピーしたURLを `gas/config_huggingface.js` の `webhookUrl` に貼り付けます．
+
+> **注意**
+> このURLを知っている人は，そのチャンネルへ自由に書き込めます．
+> 他人に見せたり，インターネット上へ貼ったりしないでください．
+> 誤って公開した場合は，同じ画面からウェブフックを削除して作り直します．
+
+### 2. Apps Scriptにコードを入れる
+
+Googleにログインした状態で <https://script.google.com/> を開き，
+「新しいプロジェクト」を作ります．
+
+左側のファイル一覧の「＋」から，`gas` フォルダにある**すべてのファイル**を
+同じ名前で作り，中身を貼り付けてください．
+
+| GAS上で作るファイル名 | 元のファイル |
+| --- | --- |
+| `config_huggingface.gs` | `gas/config_huggingface.js` |
+| `main.gs` | `gas/main.js` |
+| （以下同様） | `gas/` 内の残りすべて |
+
+拡張子は，GAS上では `.gs` になります．中身はそのままで構いません．
+
+> **補足**
+> ファイル数が多いため，`clasp` という道具を使うと一括で送れます．
+> ただし，はじめのうちは手で貼り付けても問題ありません．
+
+### 3. デプロイする
+
+**デプロイとは，コードを外部から呼び出せるURLとして公開する操作です．**
+
+Apps Scriptは通常，エディタで「実行」を押したときだけ動きます．
+しかしHugging Faceは，あなたのエディタを押せません．
+そこで**呼び出せる住所（URL）を発行する**のがデプロイです．
+
+#### 手順
+
+画面**右上**の青い「デプロイ」ボタンから進みます．
+
+1. 「デプロイ」→「新しいデプロイ」
+2. 歯車のアイコン（⚙）→「ウェブアプリ」を選ぶ
+3. 次のとおり設定する
+
+| 項目 | 設定する値 |
+| --- | --- |
+| 次のユーザーとして実行 | **自分** |
+| アクセスできるユーザー | **全員** |
+
+4. 「デプロイ」を押す（初回は権限の承認画面が出ます）
+5. 表示された**ウェブアプリURL**をコピーし，`gas/config_huggingface.js` の `webAppUrl` に貼り付ける
+
+> **重要**
+> 「アクセスできるユーザー」を**全員**にしてください．
+> Hugging Faceはログイン情報を持たないため，これ以外では通知が届きません．
+
+#### コードを直したとき
+
+「デプロイ」→「デプロイを管理」から，**既存のデプロイを編集**してください．
+鉛筆のアイコンを押し，バージョンを「新バージョン」にして更新します．
+
+「新しいデプロイ」を作るとURLが変わり，Hugging Face側の登録し直しになります．
+
+#### 何を変えたら再デプロイが必要か
+
+| 変えたもの | 再デプロイ | Hugging Faceの登録 |
+| --- | --- | --- |
+| コード | **必要** | そのまま |
+| `webhookToken` | 不要 | **やり直し**（URLに含まれるため） |
+| `webAppUrl` | 不要 | そのまま |
+| Discord Webhook URL | 不要 | そのまま |
+
+古いデプロイが増えて分かりにくくなった場合は，
+「デプロイを管理」から**アーカイブ**できます．
+アーカイブは一覧から隠す操作で，Apps Scriptに完全な削除はありません．
+現役のデプロイは残してください．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
 ## しくみ
 
 ```text
-Googleカレンダー          Google Apps Script            Discord
-  今日の予定      →      毎朝1回，予定を読んで    →     メッセージが届く
-  明日の予定             メッセージを組み立てる
+Hugging Face          … リポジトリが更新される
+        ↓ Webhook（更新の知らせをPOSTで送る）
+Google Apps Script    … 合言葉を確認し，内容を読んで本文を組み立てる
+        ↓ Hugging Face API（作者名・コミットメッセージを補う）
+Discord Webhook       … チャンネルへ通知が届く
 ```
 
-- 実行基盤は Google Apps Script（GAS）
-- カレンダーの読み取りは GAS 組み込みの `CalendarApp`（Google Cloud の設定は不要）
-- Discord への送信は Webhook
-- 実行タイミングは GAS の時間主導型トリガー
+**Google Apps Script（GAS）** はGoogleが無料で提供している
+「Googleのサーバー上でプログラムを動かす仕組み」です．
+自分のパソコンの電源が切れていても動きます．
+
+Hugging Faceから届く知らせには，**リポジトリ名・ブランチ・コミットのSHAまで**しか入っていません．
+作者名やコミットメッセージは含まれないため，BOT側からHugging FaceのAPIを呼んで補っています．
+この補完に失敗しても，通知そのものは止まりません．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
-## 通知対象
+## 合言葉（webhookToken）
 
-対象とするカレンダーは，`calendarId` に指定した1件です．
+`webhookToken` は，**このBOTのためだけに決める文字列**です．
+Hugging Faceのトークンでも，Discordのパスワードでもありません．
 
-### 対象
+### なぜ必要なのか
 
-- `calendarId: "primary"` による自分のメインカレンダー
-- `calendarId` に指定した共有カレンダーやサブカレンダー
+このBOTのURLは「アクセスできるユーザー: 全員」で公開します．
+Hugging Face側がログイン情報を送れないため，そうするしかありません．
 
-### 対象外
+合言葉がないと，URLを知った人が次の1行だけで
+あなたのDiscordチャンネルへ好きな文面を投稿できてしまいます．
 
-- 同時に複数のカレンダーを巡回する使い方
-- 実行時にログインユーザーを切り替えて別人の `primary` を読む使い方
+```sh
+curl -X POST "https://script.google.com/macros/s/xxxxx/exec" -d '{"repo":{"name":"..."}}'
+```
 
-現在の実装では，`calendarId` に指定できる対象は1つだけです．
+合言葉は，開けっ放しの玄関につける**暗証番号**にあたります．
+番号が合わないリクエストは，本文を読む前に破棄されます．
+
+### なぜURLに付けるのか
+
+Hugging Faceは本来 `X-Webhook-Secret` というHTTPヘッダで合言葉を送りますが，
+**GASはHTTPヘッダを読めません**．そのため登録するURLの末尾に
+`?token=（合言葉）` を付けます．これは公式も認めている方法です．
+
+通常のWebhookなら `/exec` だけで済みますが，GASではこの形になります．
+Hugging Faceの `Secret` 欄は**空のままで構いません**．
+
+### 覚えておく必要はあるか
+
+**ありません．** 設定ファイルに書いておく値です．
+分からなくなったときは `step2_show_webhook_url` で再表示できます．
+
+合言葉は `step1_make_token` が自動で生成します．
+自分で考えた文字列は使わないでください．
+
+### 作り直すとき
+
+漏れた可能性があるとき（GitHubへの誤push，画面共有で映ったなど）だけ，
+`step1_remake_token` で作り直します．
+作り直すとURLが変わるため，Hugging Face側の登録もやり直しになります．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
-## ラベルによる通知対象の制御
+## Hugging Face の Webhook 設定
 
-Googleカレンダーの予定に付けた色で，通知する予定を絞り込めます．
+Webhookは**リポジトリごとの設定画面にはありません**．
+アカウント全体の設定として登録します．
 
-ただし Googleカレンダーは，ラベルに付けた名前をプログラムへ渡してくれません．
-届くのは色を表す値だけです．そのため初回だけ「そのラベルを付けた既存予定」を1件指定して，
-BOTに「この予定と同じ色を，この名前で呼ぶ」と教えます．
+<https://huggingface.co/settings/webhooks>
 
-**色番号の意味はカレンダーごとに違う**ため，設定はカレンダー単位で書きます．
+`Add a new webhook` を押し，次のように設定します．
 
-まず `gas/config_calendar.js` の `CALENDAR_BOOK` にカレンダーを登録します．
-**長いカレンダーIDを書くのはここだけ**です．
+| 項目 | 設定する値 |
+| --- | --- |
+| Target repositories | 監視したいリポジトリ，またはユーザー名・組織名 |
+| Webhook type | **Webhook URL**（Jobではありません） |
+| Webhook URL | `step2_show_webhook_url` が出力したURL |
+| Secret | **空のままにする**（URLに `?token=` を付けているため） |
+| Triggers | **Repo update** にチェック |
 
-```js
-const CALENDAR_BOOK = {
-  "メインカレンダー": "primary",
-  "サブカレンダー1": "xxxx@group.calendar.google.com"
-};
-```
+> **よくある間違い**
+> `Webhook URL` の欄に，DiscordのWebhook URL
+> （`https://discord.com/api/webhooks/…`）を貼らないでください．
+>
+> この欄に入れるのは**GASのウェブアプリURL**です．
+> DiscordのURLは通知の**送り先**であり，設定ファイルの `webhookUrl` に書きます．
+> 間違えると，Hugging Faceから送られたJSONがそのままDiscordへ流れ，
+> BOTを経由しない読みにくい通知になります．
 
-次に `gas/config_labels.js` へ，**同じ呼び名で**ラベル設定を書きます．
+3つのURLは役割が異なります．混同しないでください．
 
-```js
-const CALENDAR_LABEL_PROFILES = {
+| URL | 役割 | どこに書くか |
+| --- | --- | --- |
+| GASのウェブアプリURL | 通知を**受け取る**入口 | Hugging Faceの `Webhook URL` |
+| Discord Webhook URL | 通知の**送り先** | `config_huggingface.js` の `webhookUrl` |
+| Hugging Faceのリポジトリ | **監視する対象** | Hugging Faceの `Target repositories` |
 
-  "メインカレンダー": {
-    seeds: [
-      { labelName: "会社タスク",   sampleDate: "2026/07/05" },
-      { labelName: "アルバイト",   sampleDate: "2026/07/05" }
-    ]
-  },
+### 監視する範囲
 
-  "サブカレンダー1": {
-    seeds: [
-      { labelName: "重要", sampleDate: "2026/08/31" }
-    ]
-  }
-};
-```
+`Target repositories` には，リポジトリを1つずつ登録することも，
+**ユーザー名や組織名をまとめて登録**することもできます．
 
-見本の予定の件名がラベル名と同じなら `sampleEventTitle` は**省略できます**．
-違う件名の予定を見本にしたいときだけ書きます．
+| 入力する値 | 監視される範囲 |
+| --- | --- |
+| `kurokara-YK/3d-printing-models` | そのリポジトリだけ |
+| `kurokara-YK` | 自分のすべてのリポジトリ |
+| `kurokara-guider` | その組織のすべてのリポジトリ |
 
-```js
-{ labelName: "会社タスク", sampleDate: "2026/07/05",
-  sampleEventTitle: "定例ミーティング" },
-```
+名前空間ごと登録しておくと，**新しくリポジトリを作るたびに追加する手間がなくなります**．
+通知する対象を絞りたい場合は，`targetRepos` や `targetRepoTypes` で調整してください．
 
-`デフォルト`（色なしの予定）は自動で通知対象に加わるため，書く必要はありません．
+### Triggers の選び方
 
-カレンダーを切り替えるときは，`calendarId` に呼び名を書くだけです．
+このBOTが使うのは `Repo update` だけです．
 
-```js
-calendarId: "サブカレンダー1",
-```
+| 種類 | 内容 | 必要か |
+| --- | --- | --- |
+| Repo update | commit，タグ，ブランチの更新 | **必要** |
+| Community (PR & discussions) | Pull Requestや議論 | 不要 |
 
-サブカレンダーを増やしたいときは，`CALENDAR_BOOK` に1行足して，
-`CALENDAR_LABEL_PROFILES` に同じ呼び名のブロックを足します．
+### 動作の確認
 
-`gas/config_calendar.js` で `targetEventLabels` を切り替えると有効になります．
-
-```js
-targetEventLabels: true,                 // プロファイルの labels で絞り込む
-targetEventLabels: ["会社タスク"],       // 特定のラベルだけに絞る
-targetEventLabels: false,                // すべての予定を通知
-```
-
-書いたあと `sync_calendar_label_registry` を1回実行すると，色を覚えます．
-覚えた内容は Script Properties に保存されるため，見本の予定はあとで削除しても構いません．
-
-- 色はパレットのものでも，カラーピッカーで作ったものでも使えます
-- ただし別々のラベルに同じ色を使うと区別できません
-- `デフォルト` という名前は特別で，色なしの予定に自動で割り当てられます
-- `seeds` に書いたラベルがそのまま通知対象になります
-- 通知対象をさらに絞りたいときだけ `labels: ["重要", "デフォルト"]` を足します
-
-### カレンダーを切り替えたとき
-
-`calendarId` の呼び名を書き換えて実行すると，**対応表は自動で作り直されます．**
-色番号の意味はカレンダーごとに違うため，前のカレンダーの対応表は破棄されます．
-`clear_calendar_label_registry` を手で実行する必要はありません．
-
-対応表は**常に1カレンダー分だけ**保存されます．
-複数カレンダーの対応表を同時に持つことはできませんが，
-`CALENDAR_LABEL_PROFILES` に書いておけば切り替えのたびに自動で覚え直します．
-
-プロファイルを書いていないカレンダーを指定した場合は，
-色なしの予定を `デフォルト` として扱う既定動作になり，実行ログに警告が出ます．
-
-`CALENDAR_BOOK` に無い呼び名を書いた場合は，書き間違いとして実行時にエラーになります．
-エラー文には登録済みの呼び名が一覧で出ます．
-
-**しくみの詳細・設定の書き方・うまく動かないときの調べ方は
-[docs/label_setup.md](docs/label_setup.md) にあります．**
+登録後，Webhookの設定画面に **Activity** タブがあります．
+送信されたデータとHTTPステータスコードを確認でき，`Replay` で再送もできます．
+うまく動かないときは，まずここを見てください．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
-## 通知タイミング
+## Hugging Face アクセストークン
 
-通知は「当日分」と「翌日分」の2種類で，どちらも `gas/config_calendar.js` で切り替えます．
+`hf_` で始まるトークンのことです．**設定は任意で，あとから追加できます．**
+
+### いつ設定するか
+
+**最初は設定しなくて構いません．**
+まず通知が届くことを確認し，「作者名も出したい」と思ったときに追加してください．
+
+設定を追加しても，デプロイのやり直しやHugging Face側の再登録は不要です．
+
+### 2つの定数の違い
+
+`config_huggingface.js` には，名前の似た定数が2つあります．
 
 ```js
-enableTodayReminder: true,      // 当日の予定を通知する
-enableTomorrowReminder: true,   // 翌日の予定を通知する
+const HUGGINGFACE_TOKEN_PROPERTY_KEY = "HF_ACCESS_TOKEN";   // 保存先の名前
+const HUGGINGFACE_ACCESS_TOKEN = "";                        // トークンの値
 ```
 
-実行するのは `calendar_reminder_main` の1つだけです．
-この関数は実行時に上の2つを見て，当日分を先に，翌日分を後に置き，
-**1回のメッセージへまとめて送ります．** 両方 `true` でも送信は1回です．
+| 定数 | 中身 | 書き換えるか |
+| --- | --- | --- |
+| `HUGGINGFACE_TOKEN_PROPERTY_KEY` | 保存先（スクリプト プロパティ）の名前 | **不要** |
+| `HUGGINGFACE_ACCESS_TOKEN` | トークンそのもの | **ここに貼る** |
 
-通知時刻は GAS の時間主導型トリガーで決まります．コード側に時刻の設定はありません．
-トリガーの作り方は [docs/getting_started.md](docs/getting_started.md) の手順8にあります．
+前者はロッカーの番号札，後者が中身にあたります．
+
+### 設定するとどう変わるか
+
+| リポジトリの種類 | 未設定のとき | 設定したとき |
+| --- | --- | --- |
+| public | 作者名・コミットメッセージが表示される | 同じ |
+| **private** | **その行が省かれる** | 作者名・コミットメッセージが表示される |
+
+privateリポジトリを監視していて，**通知に作者名やコミットメッセージを出したい場合だけ**設定してください．
+「どのブランチが更新されたか」だけで足りるなら，設定は不要です．
+
+未設定でも通知そのものは正常に届きます．
+
+### 発行のしかた
+
+1. <https://huggingface.co/settings/tokens> を開きます
+2. `Create new token` を押します
+3. Token type で **`Fine-grained`** を選びます
+4. `Repository permissions` で，読み取りたい範囲に **Read** を付けます
+
+| 対象 | 付ける権限 | 読める範囲 |
+| --- | --- | --- |
+| `kurokara-YK`（個人） | Read | 自分のpublic・privateすべて |
+| `kurokara-guider`（組織） | Read | 組織のpublic・privateすべて |
+
+**両方に付ければ，1つのトークンで個人と組織の両方をカバーできます．**
+publicリポジトリは認証なしでも読めるため，privateが読めれば十分です．
+
+5. `Create token` を押し，表示された値をコピーします．**一度しか表示されません**
+
+> **なぜ `Read` ではなく `Fine-grained` か**
+> `Read` は「自分が読めるものすべて」に効きます．
+> `Fine-grained` は範囲を限定できるため，万一漏れたときの影響が小さく，
+> Hugging Face公式も本番用途にはこちらを推奨しています．
+
+### 組織で運用する場合
+
+Hugging Faceに**組織が所有するトークンはありません．** すべて個人のトークンです．
+組織メンバーの個人トークンが，組織のprivateリポジトリを読む形になります．
+
+そのため，発行した人が組織を抜けると通知が止まります．
+長く運用する場合は，**BOT専用のHugging Faceアカウントを作り，組織に招待する**方法を推奨します．
+担当者が変わっても影響を受けません．
+
+トークンを差し替えるときは，スクリプト プロパティの値を変えるだけです．
+再デプロイもHugging Face側の再登録も不要です．
 
 > **注意**
-> GAS の時間主導型トリガーは，指定した時間帯の中で実行されます．
-> 「午前7時〜8時」を選ぶと 7:00 ちょうどではなく 7:23 などになります．
->
-> また，このBOTには「同じ日に何度も送らない」制御がありません．
-> **1時間おきのトリガーにすると1時間ごとに再通知されます．**
-> 必ず「日付ベースのタイマー」を選んでください．
+> 組織がTeamまたはEnterpriseプランの場合，
+> 組織を対象にしたトークンは**管理者の承認待ち**になることがあります．
+> 承認されるまでは組織のリポジトリへのアクセスが `403` になります．
 
-<p align="right">(<a href="#readme-top">上に戻る</a>)</p>
+### 保存のしかた
 
-## 実行アカウントとカレンダー権限
+`config_huggingface.js` の `HUGGINGFACE_ACCESS_TOKEN` に貼り，
+`save_access_token` を実行します．
 
-このBOTは「ログインした人を自動判定してその人のカレンダーを読むBOT」ではありません．Apps Script を認可してトリガーを作成した Google アカウントの権限で動きます．
-
-`calendarId: "primary"` の場合は，その実行アカウント自身のメインカレンダーを読みます．
-
-また，`calendarId` に特定のカレンダーIDを入れた場合は，その実行アカウントが閲覧権限を持ち，かつ必要に応じてラベルを扱える1件のカレンダーを読みます．
-
-つまり，現在の実装でできることは次です．
-
-- 自分のメインカレンダーを通知する
-- 自分が閲覧できる共有カレンダーやサブカレンダーを1件だけ通知する
-
-現在の実装でできないことは次です．
-
-- 実行時にログインユーザーを切り替えて別人の `primary` を読む
-- 1つのトリガーで複数ユーザーの個人カレンダーをまとめて巡回する
-- ユーザーごとにOAuthログインさせて個別設定を持つSaaS風の運用
-
-個人利用の範囲を少し広げたい場合は，次の方法が現実的です．
-
-- 共有カレンダーを1つ作り，そのカレンダーIDを `calendarId` に設定する
-- 通知専用のGoogleアカウントを1つ用意し，対象カレンダーをそのアカウントに共有して，そのアカウントでトリガーを作る
-
-より本格的に「ログインした各ユーザーのカレンダーをそれぞれ通知したい」場合は，GAS 単体よりも，OAuthログイン，ユーザーごとのトークン保存，定期実行基盤を持つサーバーアプリ構成のほうが向いています．
-
-<details>
-  <summary>このBOTが実際に誰の権限で動くか</summary>
-
-- `calendarId: "primary"` は「そのときブラウザで見ている人」ではなく，「Apps Script を認可してトリガーを作った Google アカウント」のメインカレンダーを意味します
-- 手動実行でもトリガー実行でも，基本的にはそのスクリプトを認可したアカウント権限でカレンダーが読まれます
-- そのため，別の人の `primary` を勝手に読めるわけではありません
-
-</details>
-
-<details>
-  <summary>calendarId に設定できる値</summary>
-
-- `primary`
-- 自分のメインカレンダーのメールアドレス形式のID
-- 共有カレンダーやサブカレンダーの `xxxxxxxxxxxx@group.calendar.google.com` 形式のID
-
-カレンダーIDは Googleカレンダーの次の場所で確認できます．
-
-- 設定
-- マイカレンダーの設定
-- 対象カレンダー
-- カレンダーの統合
-- カレンダー ID
-
-</details>
-
-<details>
-  <summary>他人のカレンダーを読める条件</summary>
-
-次のいずれかに当てはまるカレンダーだけを読めます．
-
-- 実行アカウント本人のカレンダー
-- 実行アカウントへ共有されているカレンダー
-- 公開設定されているカレンダー
-- 適切な権限付与が済んでいるカレンダー
-
-逆に，`calendarId` に他人のメールアドレスを書いただけでは予定は取得できません．権限がなければ API エラーになります．
-
-</details>
-
-<details>
-  <summary>初回実行時の承認について</summary>
-
-Googleカレンダーは個人情報を含むため，このBOTを初回実行すると Google の承認画面が出ます．
-
-`CalendarApp` を使っているので，事前の設定作業はありません．画面の指示にしたがって「許可」を押すだけです．
-
-他の人がこのBOTを使う場合は，その人が自分の Apps Script プロジェクトを持ち，自分のアカウントで承認します．
-
-</details>
-
-<p align="right">(<a href="#readme-top">上に戻る</a>)</p>
-
-## CalendarApp とセットアップ
-
-このBOTは GAS 組み込みの `CalendarApp` でカレンダーを読みます．Google Calendar API を直接叩いていないため，**Google Cloud 側の設定は一切不要です．**
-
-### 必要ないもの
-
-- Google Cloud プロジェクトの作成
-- Google Calendar API の有効化
-- Apps Script への Cloud プロジェクト番号の紐付け
-- OAuth 同意画面の設定・テストユーザーの登録
-
-これらは，公開APIである Calendar API を外部から叩くときに必要になる手続きです．`CalendarApp` は GAS の中から Google のサービスへ直接アクセスするため，どれも必要ありません．
-
-### 必要なこと
-
-初回実行時に承認画面が出るので，「許可」を押すだけです．Apps Script が自動的に画面を出すので，事前の登録作業はありません．
-
-承認するスコープは `gas/appsscript.json` に書かれた次の3つです．
-
-| スコープ | 用途 |
-| --- | --- |
-| `calendar` | `CalendarApp` によるカレンダー読み取り |
-| `script.external_request` | Discord Webhook への送信 |
-| `script.storage` | Script Properties へのラベルレジストリ保存 |
-
-`CalendarApp` は読み取りだけの用途でも `calendar` スコープを要求します．
-
-あわせて `appsscript.json` で **Advanced Calendar Service**（`Calendar` v3）を有効にしています．
-Googleカレンダーの**名前付きラベル**は `CalendarApp` から取得できず，
-このサービス経由でのみ `eventLabelId` を読めるためです．
-
-Apps Script 標準の機能なので，**Cloud プロジェクトの作成もAPIキーも不要**です．
-スコープも上の3つから増えません．
-
-### config に書く値
-
-`gas/config_calendar.js` に書くのは `calendarId`，Webhook URL，通知条件です．Cloud のプロジェクト番号やプロジェクトIDを書く場所はありません．
-
-<details>
-  <summary>以前 Calendar API を使っていた頃の設定について</summary>
-
-このBOTは以前 Google Calendar API v3 を `UrlFetchApp` で直接叩いていました．当時は Google Cloud プロジェクトの作成と Calendar API の有効化が必須で，設定を忘れると次のエラーが出ていました．
-
-```text
-SERVICE_DISABLED
-Google Calendar API has not been used in project ... before or it is disabled.
+```js
+const HUGGINGFACE_ACCESS_TOKEN = "ここにHugging Faceのアクセストークンを入れてください";
 ```
 
-`CalendarApp` へ移行したため，このエラーは発生しなくなりました．過去に作った Google Cloud プロジェクトが残っていても，このBOTの動作には影響しません．
+実行するとスクリプト プロパティへ保存され，以降はそちらが使われます．
+保存後は設定ファイルの行を空にして構いません．
 
-なお，API を使っていた当初の目的は「Googleカレンダー UI のラベル名を取得すること」でしたが，実測の結果 API からもラベル名は返らないことが分かったため，API を使う理由がなくなりました．現在は `CalendarApp` だけで動作します．
+```js
+const HUGGINGFACE_ACCESS_TOKEN = "";
+```
 
-</details>
+| 関数 | 動作 |
+| --- | --- |
+| `save_access_token` | 設定ファイルの値をスクリプト プロパティへ保存する |
+| `delete_access_token` | 保存したトークンを削除する |
+
+トークンを入れ替えるときは，新しい値を貼って `save_access_token` を再実行します．
+実行ログにトークンそのものは出力されず，`hf_YCW…OwTI／37文字` のように伏せ字で表示されます．
+
+設定ファイルを空にせず残しておいても動作します．
+その場合，スクリプト プロパティの値が優先されます．
+
+> **なぜスクリプト プロパティに移すのか**
+> `config_huggingface.js` は `.gitignore` で除外しているためGitには載りませんが，
+> スクリプト プロパティへ移しておくと，設定ファイルを他の人へ渡すときや
+> 画面を共有するときにトークンが目に入りません．
+>
+> ただしスクリプト プロパティは，Apps Scriptプロジェクトの
+> **編集権限を持つ人なら誰でも閲覧できます．**
+> 組織で使う場合は，プロジェクトの共有相手を必要な人だけに絞ってください．
+
+トークンが漏れた場合は，[Access Tokens](https://huggingface.co/settings/tokens) から
+削除して作り直してください．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
 ## 設定項目一覧
 
-`gas/config_calendar.js` で設定できる項目の一覧です．
+`gas/config_huggingface.js` で設定します．
 
-| 項目 | 既定値 | 意味 |
+### 接続先
+
+| 設定名 | 内容 | 初期値 |
 | --- | --- | --- |
-| `webhookUrl` | プレースホルダ | Discord の Webhook URL．**必ず自分の値に書き換える** |
-| `calendarId` | `"primary"` | 読み取るカレンダー．`"primary"` は実行アカウントのメインカレンダー |
-| `targetEventLabels` | `false` | 通知対象のラベル．`false`＝全予定／`true`＝プロファイルの `labels`／配列＝指定したラベルのみ |
-| `CALENDAR_BOOK` | — | 使うカレンダーの「呼び名 → カレンダーID」対応．IDを書くのはここだけ |
-| `enableTomorrowReminder` | `true` | 明日の予定を通知するか |
-| `enableTodayReminder` | `true` | 今日の予定を通知するか |
-| `notifyIfEmpty` | `false` | 予定が0件の日も「予定はありません」と通知するか |
-| `showDescription` | `true` | 予定の説明欄をメッセージに含めるか |
-| `descriptionMaxLength` | `80` | 説明欄を何文字で切り詰めるか |
-| `calendarLinkView` | `"week"` | メッセージ末尾のリンクを開いたときの表示形式．`"day"` / `"week"` / `"month"` / `"year"` |
-| `calendarUrlBase` | Googleカレンダーの URL | メッセージ末尾のリンクのベースURL |
+| `label` | 実行ログに出す表示名 | Hugging Face 連携 Discord 通知BOT |
+| `webhookUrl` | Discord Webhook URL | 未設定 |
+| `webhookToken` | このBOT専用の合言葉 | 未設定 |
+| `webAppUrl` | デプロイしたウェブアプリのURL | 未設定 |
 
-`gas/config_labels.js` で設定できる項目は次の2つです．
+### 通知の対象
 
-| 項目 | 意味 |
-| --- | --- |
-| `CALENDAR_LABEL_PROFILES` | 通知したいラベル名の一覧 |
-| `CALENDAR_LABEL_REGISTRY_SEEDS` | 各ラベル名に対応する「見本の予定」の指定 |
+| 設定名 | 内容 | 初期値 |
+| --- | --- | --- |
+| `targetRepoTypes` | 通知する種別．`false` ならすべて | `false` |
+| `targetRepos` | 通知するリポジトリ名．`false` ならすべて | `false` |
+| `notifyPrivateRepos` | privateリポジトリも通知するか | `true` |
+| `notifyPullRequestRefs` | Pull Requestの更新も通知するか | `true` |
+| `notifyOnDelete` | ブランチやタグの削除も通知するか | `true` |
 
-詳しくは [docs/label_setup.md](docs/label_setup.md) を参照してください．
+`targetRepoTypes` には `["model", "dataset"]` のように書きます．
+`targetRepos` には `["kurokara-YK/3d-printing-models"]` のように書きます．
+
+> **注意**
+> `notifyPrivateRepos` を `true` にすると，privateリポジトリのコミットメッセージが
+> Discordへ流れます．送信先は必ず限定公開のチャンネルにしてください．
+
+### 表示の内容
+
+| 設定名 | 内容 | 初期値 |
+| --- | --- | --- |
+| `showAuthor` | pushした人の名前を表示するか | `true` |
+| `fetchCommitDetails` | APIで作者名・コミットメッセージを補うか | `true` |
+| `commitMessageMaxLength` | コミットメッセージの最大文字数 | `100` |
+| `notifyErrorsToDiscord` | エラーをDiscordへ送るか | `true` |
+
+`fetchCommitDetails` を `false` にすると，
+「どのブランチが更新されたか」だけの通知になります．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
 ## 実行できる関数
 
-Apps Script の実行画面やトリガー設定で選べる関数です．
+Apps Scriptの「実行する関数」から選べます．
 
-| 関数名 | できること | 主な用途 |
-| --- | --- | --- |
-| `calendar_reminder_main` | 当日通知を先に，前日通知を後に，1回のメッセージへまとめて送信する | **本番トリガーの実行関数** |
-| `calendar_today_reminder_main` | 当日通知だけを作成して送信する | 当日通知だけを個別に動かしたい確認用 |
-| `calendar_tomorrow_reminder_main` | 前日通知だけを作成して送信する | 前日通知だけを個別に動かしたい確認用 |
-| `test_send_discord_message` | 固定のテスト文面を Discord に送る | Webhook 接続確認 |
-| `sync_calendar_label_registry` | 見本の予定から「色 ↔ ラベル名」の対応を覚え直す | 初回設定・色変更後の再同期用 |
-| `clear_calendar_label_registry` | 保存済みの対応表を空に戻す | 対応表の作り直し用 |
-| `inspect_calendar_labels` | 対応表と，**当日の**各予定の色番号を実行ログに出力する | ラベル診断用 |
-| `debug_calendar_seed_candidates` | 見本の日付の**前後30日**から，件名の一致と色を突き合わせて出力する | 見本が見つからないときの原因調べ用 |
-
-通常運用でトリガーに設定するのは **`calendar_reminder_main`** です．
-
-### 診断関数が出力する内容
-
-`inspect_calendar_labels` と `debug_calendar_seed_candidates` は，
-実行ログ（Apps Script の「実行数」画面）へ次を出力します．
-
-| 出力項目 | 意味 |
+| 関数名 | 内容 |
 | --- | --- |
-| `calendarName` | `calendarId` に書いた呼び名 |
-| `calendarId` | 呼び名から解決された実際のカレンダーID |
-| `profileSource` | 使われた設定の出どころ．`profile`（正常）／`legacy`（旧形式）／`fallback`（プロファイル未定義） |
-| `seedCount` | そのカレンダー用に定義した見本の件数 |
-| `colorId` | 予定に付いている色番号 |
-| `eventLabelId` | 名前付きラベルの識別子（色番号を持たない予定用） |
+| `step1_make_token` | 合言葉を発行する（設定済みならその旨を知らせる） |
+| `step1_remake_token` | 合言葉を作り直す．Hugging Face側の登録もやり直しになる |
+| `step2_show_webhook_url` | Hugging Faceに登録するURLを表示する |
+| `save_access_token` | HFアクセストークンをスクリプト プロパティへ保存する |
+| `delete_access_token` | 保存したHFアクセストークンを削除する |
+| `test_send_discord_message` | Discordへ固定の文面を送り，接続を確認する |
+| `test_huggingface_payload` | サンプルデータで実際の文面を確認する |
 
-`profileSource` が `fallback` になっている場合は，
-`config_labels.js` の `CALENDAR_LABEL_PROFILES` にそのカレンダーの項目がありません．
+### doPost について
 
-> **内部関数について**
-> 上記の関数から呼ばれる `logCalendarLabelRegistry_`，`logCalendarLabelDiagnostics_`，
-> `logCalendarSeedCandidates_` は末尾が `_` の内部関数です．
-> Apps Script の実行メニューには表示されないため，直接は実行できません．
+`doPost` も一覧に表示されますが，**手動で実行しないでください．**
 
-> **注意**
-> どの関数も，実行すると**実際にDiscordへ送信されます．**
-> 文面だけ確認したい場合は，`webhookUrl` を一時的にテスト用チャンネルのものへ差し替えてください．
+これはHugging Faceから知らせが届いたときに，GASが自動で呼び出す入口です．
+手動で実行すると，合言葉が付いていない状態で動くため，
+実行ログに「token がありません。破棄します。」と出て何も起きません．
+エラーにはならず，Discordへも送信されません．
 
-<p align="right">(<a href="#readme-top">上に戻る</a>)</p>
+| 関数 | 呼び出す人 |
+| --- | --- |
+| `doPost` | Hugging Face（自動） |
+| それ以外 | 自分（手動） |
 
-## clasp設定
+末尾が `_` の関数（`processHuggingFacePayload_` など）は内部用のため，
+一覧には表示されません．
 
-`clasp` を使うと，パソコン上のエディタでコードを編集して GAS へ送れます．
+### 設定の手順
 
-- `.clasp.json` にスクリプトIDを書く（プレースホルダ入りで同梱しています）
-- `clasp push` の送信対象は `rootDir` の指定により `gas/` 配下だけ
-- `gas/appsscript.json` に必要な3つのスコープを記載済み
+`step1` と `step2` は，**間にデプロイを挟むため2つに分かれています**．
 
-環境構築の手順は [docs/development_environment.md](docs/development_environment.md) にあります．
-BOTを動かすだけなら clasp は不要です．
+| 順番 | 関数 | すること |
+| --- | --- | --- |
+| 1 | `step1_make_token` | 合言葉を発行し，`config_huggingface.js` に貼る |
+| 2 | （手作業） | デプロイし，**ウェブアプリURLをコピーする** |
+| 3 | （手作業） | `config_huggingface.js` の `webAppUrl` に貼る |
+| 4 | `step2_show_webhook_url` | Hugging Faceに登録するURLが表示される |
+
+`step1_make_token` は，すでに合言葉が設定されている場合は作り直しません．
+作り直したいときだけ `step1_remake_token` を使ってください．
+作り直すと，Hugging Face側に登録したURLも無効になります．
+
+> **なぜURLを手で貼るのか**
+> Apps Scriptの `getUrl()` は，エディタから実行すると
+> **開発用（`/dev`）のURLや，古いデプロイのURLを返す**ことがあります．
+> そのURLを登録すると，Hugging Faceから呼び出しても届きません．
+>
+> デプロイ画面に表示されたURLを `webAppUrl` に貼ることで，
+> 確実に正しいURLを登録できます．
+>
+> `?token=…` まで含めて貼ってしまっても，自動で取り除きます．
+
+### 確認する順番
+
+うまく動かないときは，次の順に試すと原因を切り分けられます．
+
+1. `test_send_discord_message` — Discordへ届くか
+2. `test_huggingface_payload` — 文面が正しく作られるか
+3. `step2_show_webhook_url` — 登録したURLと一致しているか
+
+`test_huggingface_payload` は，実行するたびに処理済みの記録を消すため，
+何度でも同じ内容を試せます．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
 ## ファイル構成
 
-<details>
-  <summary>ディレクトリ構成</summary>
-
 ```text
 .
-├── .clasp.json
-├── .gitignore
-├── AGENTS.md
 ├── README.md
-├── docs
-│   ├── development_environment.md
-│   ├── getting_started.md
-│   └── label_setup.md
+├── .clasp.json
 └── gas
-    ├── appsscript.json
-    ├── calendar_api.js
-    ├── calendar_diagnostics.js
-    ├── calendar_formatters.js
-    ├── calendar_labels.js
-    ├── config_calendar.js
-    ├── config_labels.js
-    ├── label_registry.js
-    ├── main.js
-    ├── reminder_builders.js
-    ├── send_discord.js
-    ├── settings_resolver.js
-    └── utils.js
+    ├── appsscript.json          マニフェスト（実行権限とタイムゾーン）
+    ├── config_huggingface.js    設定ファイル．ここだけ書き換える
+    ├── main.js                  入口．doPost と確認用の関数
+    ├── webhook_verify.js        合言葉の照合
+    ├── payload_parser.js        届いたデータの読み取りと絞り込み
+    ├── hf_api.js                作者名・コミットメッセージの取得
+    ├── message_builders.js      Discordへ送る本文の組み立て
+    ├── send_discord.js          Discordへの送信
+    ├── event_store.js           二重通知の防止
+    ├── settings_resolver.js     設定値の検証
+    ├── utils.js                 小さな共通関数
+    └── sample_data.js           動作確認用のサンプルデータ
 ```
 
-</details>
-
-<details>
-  <summary>ファイルごとの役割</summary>
-
-| パス | 役割 |
-| --- | --- |
-| `README.md` | プロジェクト全体の入口となるメイン説明書 |
-| `AGENTS.md` | 複数カレンダー対応の設計メモと，開発時の作業規約 |
-| `docs/getting_started.md` | セットアップ手順．初めて使う人向け |
-| `docs/label_setup.md` | ラベル（色）のしくみと調べ方 |
-| `docs/development_environment.md` | clasp を使う開発環境の構築手順 |
-| `.clasp.json` | GASプロジェクト紐付け設定（スクリプトIDを書き込む） |
-| `gas/appsscript.json` | GAS プロジェクトのマニフェスト |
-| `gas/calendar_api.js` | `CalendarApp` によるカレンダー取得とイベント取得 |
-| `gas/calendar_diagnostics.js` | レジストリと各予定の色・ラベルを調べる診断ログ |
-| `gas/calendar_formatters.js` | 日時整形，説明文整形，Discord本文生成 |
-| `gas/calendar_labels.js` | 通知対象ラベル名の判定とイベント絞り込み |
-| `gas/config_calendar.js` | カレンダーBOT向けの主要設定 |
-| `gas/config_labels.js` | カレンダーごとの通知対象ラベルと，ラベル同期用サンプル予定の設定 |
-| `gas/label_registry.js` | Script Properties に保存するラベルレジストリの管理 |
-| `gas/main.js` | Apps Script から実行する入口関数 |
-| `gas/reminder_builders.js` | 前日通知・当日通知の payload 組み立て |
-| `gas/send_discord.js` | Discord Webhook 送信処理 |
-| `gas/settings_resolver.js` | ユーザー設定を実行用設定へ正規化し，Webhook設定も検証する |
-| `gas/utils.js` | 小さい共通関数だけをまとめた補助ファイル |
-
-</details>
+通常，書き換えるのは `config_huggingface.js` だけです．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
 ## Git管理上の注意
 
-`.clasp.json` や Webhook URL など，環境依存情報や秘密情報は Git に含めないようにしてください．
+`gas/config_huggingface.js` には**Discord Webhook URLと合言葉が入る**ため，
+`.gitignore` でコミットの対象から外しています．
 
-`git status` で `.clasp.json` がGitの管理対象に含まれていないことを確認してください．
+`.clasp.json` は，プレースホルダの状態でリポジトリに含めています．
+自分のスクリプトIDを書き込んだあとは，次のコマンドで変更が追跡されないようにしてください．
 
 ```sh
-git status
+git update-index --skip-worktree .clasp.json
 ```
+
+> **注意**
+> Discord Webhook URLを知っている人は，そのチャンネルへメッセージを送信できます．
+> URLを他人に共有したり，公開リポジトリに載せたりしないでください．
+> 誤って公開した場合は，Discord側でそのウェブフックを削除して作り直してください．
+
+Hugging Faceのアクセストークンは，設定ファイルではなく
+スクリプト プロパティに保存するため，コミットされることはありません．
+
+<p align="right">(<a href="#readme-top">上に戻る</a>)</p>
+
+## うまくいかないとき
+
+まず，Hugging Faceの [Webhooks設定](https://huggingface.co/settings/webhooks) にある
+**Activity** タブを確認してください．送信されたデータとHTTPステータスが表示されます．
+
+| 症状 | 確認すること |
+| --- | --- |
+| 通知がまったく来ない | Activityタブに記録があるか．無ければHugging Face側の登録を確認する |
+| `Everything up-to-date` と出てpushできない | コミットができていない．`git status` で確認し，`git commit -m "説明"` を実行する |
+| `git commit` でエラーになる | コマンドの打ち間違いが多い．`commit` の後にハイフンは付かない |
+| `last trigger: never` のまま | 登録したURLが古いデプロイを指している可能性がある．`step2_show_webhook_url` の出力と，Hugging Faceに登録済みのURLを見比べる |
+| Activityに記録はあるが通知が来ない | URLの `?token=` と `webhookToken` が一致しているか |
+| `401` や `403` になる | デプロイの「アクセスできるユーザー」が**全員**になっているか |
+| 作者名が出ない | privateリポジトリなら `HF_ACCESS_TOKEN` を設定する |
+| コミットメッセージが出ない | 同上．`fetchCommitDetails` が `true` か |
+| 同じ通知が2回来る | 通常は起きない．Hugging Face側の再送は自動で除かれる |
+| Pull Requestが通知されない | `notifyPullRequestRefs` が `false` になっていないか |
+| Webhookが止まった | 配信が続けて失敗すると自動で停止する．設定画面から再開する |
+
+Webhookには**24時間あたり1,000回**の上限があります．
+通常の使い方で超えることはありません．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 
 ## 関連資料
 
+- [Hugging Face Webhooks（公式ドキュメント）](https://huggingface.co/docs/hub/webhooks)
+- [Hugging Face Access Tokens](https://huggingface.co/settings/tokens)
 - [Google Apps Script 公式ドキュメント](https://developers.google.com/apps-script)
-- [Apps Script CalendarApp](https://developers.google.com/apps-script/reference/calendar/calendar-app)
-- [Apps Script CalendarEvent](https://developers.google.com/apps-script/reference/calendar/calendar-event)
-- [Apps Script のトリガー](https://developers.google.com/apps-script/guides/triggers/installable)
+- [Apps Script のウェブアプリ](https://developers.google.com/apps-script/guides/web)
 - [Discord — Webhookの使い方（公式ヘルプ）](https://support.discord.com/hc/ja/articles/228383668)
 - [clasp - GitHub](https://github.com/google/clasp)
 
@@ -584,11 +710,8 @@ git status
 | 作成者 | kurokara-YK |
 | 連絡先 | kurokara1226@gmail.com |
 | リンク集 | https://lit.link/kurokara |
-| リポジトリ | https://github.com/kurokara-YK/google_calendar_discord_bot |
 
-不具合の報告や改善の提案は，
-[Issues](https://github.com/kurokara-YK/google_calendar_discord_bot/issues)
-または上記のメールアドレスまでお願いします．
+不具合の報告や改善の提案は，Issues または上記のメールアドレスまでお願いします．
 
 <p align="right">(<a href="#readme-top">上に戻る</a>)</p>
 

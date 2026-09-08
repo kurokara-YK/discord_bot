@@ -28,12 +28,11 @@ function send_discord(webhookUrl, content) {
 
   const response = UrlFetchApp.fetch(webhookUrl, options);
   const statusCode = response.getResponseCode();
-  const responseText = response.getContentText();
 
   Logger.log("send_discord: statusCode = " + statusCode);
-  Logger.log("send_discord: responseText = " + responseText);
 
   if (statusCode < 200 || statusCode >= 300) {
+    // 応答本文に Webhook URL は含まれないが，念のため長さを抑える。
     throw new Error("send_discord: Discord送信に失敗しました。status=" + statusCode);
   }
 
